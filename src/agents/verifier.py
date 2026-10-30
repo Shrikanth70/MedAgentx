@@ -259,3 +259,90 @@ class VerifierAgent:
             intervention=intervention,
             safety_reason=safety_reason,
         )
+
+    def verify_patient(
+        self,
+        query_text: str,
+        vector_evidence: list[dict[str, Any]],
+        patient: Any,
+        graph_evidence: list[dict[str, Any]] | None = None,
+        previous_chunks: list[dict[str, Any]] | None = None,
+    ) -> VerifierOutput:
+        """Verify evidence and assess acute vital sign, laboratory, and drug allergy contraindications."""
+        out = self.verify(
+            query_text=query_text,
+            vector_evidence=vector_evidence,
+            graph_evidence=graph_evidence or [],
+            previous_chunks=previous_chunks,
+        )
+
+        q_lower = query_text.lower()
+        full_text = " ".join([c.get("content", "").lower() for c in vector_evidence])
+
+        # 1. Vital Sign Check: Acute Hypotension (SBP < 90 or MAP < 65)
+        if getattr(patient, "is_hypotensive", False):
+            vasodilators = ["nitroglycerin", "nitrate", "nitroprusside", "hydralazine", "metoprolol", "carvedilol", "beta blocker", "acei", "lisinopril"]
+            if any(v in q_lower or v in full_text for v in vasodilators):
+                out.safety_signal = True
+                out.contradiction_type = "CLINICAL_CONTRAINDICATION"
+                out.safety_severity = "HIGH"
+                out.r_contra = 0.85
+                out.safety_reason = (
+                    f"Severe Acute Hypotension detected (BP {getattr(patient, 'sbp', 'N/A')}/{getattr(patient, 'dbp', 'N/A')} mmHg). "
+                    "Vasodilators, nitrates, and acute beta-blockers are CONTRAINDICATED due to high risk of refractory cardiogenic shock. "
+                    "Prioritize IV crystalloid fluid resuscitation and early vasopressors (Norepinephrine)."
+                )
+                out.intervention = "Vasodilators / Antihypertensives"
+                out.clinical_context = f"Severe Hypotension (BP {getattr(patient, 'sbp', '')}/{getattr(patient, 'dbp', '')} mmHg)"
+                out.detected_contradictions.append(out.safety_reason)
+
+        # 2. Laboratory Check: Severe Hyperkalemia (Serum K+ > 5.2 mEq/L)
+        if getattr(patient, "is_hyperkalemic", False):
+            k_sparing = ["spironolactone", "eplerenone", "mra", "arni", "sacubitril", "lisinopril", "enalapril", "ramipril", "losartan", "valsartan", "ace inhibitor", "arb"]
+            if any(k in q_lower or k in full_text for k in k_sparing):
+                out.safety_signal = True
+                out.contradiction_type = "CLINICAL_CONTRAINDICATION"
+                out.safety_severity = "HIGH"
+                out.r_contra = 0.85
+                out.safety_reason = (
+                    f"Severe Hyperkalemia detected (Serum K+ {getattr(patient, 'potassium', 'N/A')} mEq/L). "
+                    "Aldosterone antagonists (Spironolactone), ARNI, and ACEi/ARBs are CONTRAINDICATED due to risk of fatal cardiac arrest. "
+                    "Initiate emergent cardiac membrane stabilization (IV Calcium Gluconate) and intracellular potassium shifting (Insulin + D50)."
+                )
+                out.intervention = "Potassium-Sparing Agents (MRA / ARNI / ACEi)"
+                out.clinical_context = f"Severe Hyperkalemia (K+ {getattr(patient, 'potassium', '')} mEq/L)"
+                out.detected_contradictions.append(out.safety_reason)
+
+        # 3. Laboratory Check: Severe Renal Impairment (eGFR < 30 mL/min)
+        if getattr(patient, "is_severe_renal_impairment", False):
+            nephrotoxic = ["metformin", "nsaid", "ibuprofen", "naproxen", "ketorolac", "sglt2", "dapagliflozin", "empagliflozin"]
+            if any(n in q_lower or n in full_text for n in nephrotoxic):
+                out.safety_signal = True
+                out.contradiction_type = "CLINICAL_CONTRAINDICATION"
+                out.safety_severity = "HIGH"
+                out.r_contra = 0.80
+                out.safety_reason = (
+                    f"Severe Renal Impairment detected (eGFR {getattr(patient, 'egfr', 'N/A')} mL/min). "
+                    "Metformin is contraindicated due to lactic acidosis risk. NSAIDs and SGLT2 inhibitors are withheld during acute renal hypoperfusion."
+                )
+                out.detected_contradictions.append(out.safety_reason)
+
+        # 4. Drug Allergy Cross-Checking
+        allergies = [a.lower() for a in getattr(patient, "allergies", [])]
+        if any("penicillin" in a or "amoxicillin" in a or "beta-lactam" in a for a in allergies):
+            penicillins = ["penicillin", "amoxicillin", "ampicillin", "augmentin", "piperacillin", "ceftriaxone", "cephalosporin"]
+            if any(p in q_lower or p in full_text for p in penicillins):
+                out.safety_signal = True
+                out.contradiction_type = "ALLERGY_CONTRAINDICATION"
+                out.safety_severity = "HIGH"
+                out.r_contra = 0.85
+                out.safety_reason = (
+                    f"Documented Severe Drug Allergy: Penicillin / Beta-lactam. "
+                    "Beta-lactam antibiotics are strictly CONTRAINDICATED. "
+                    "Use guideline-directed non-beta-lactam alternatives (Respiratory fluoroquinolones like Levofloxacin or Macrolides/Aztreonam)."
+                )
+                out.intervention = "Penicillin / Beta-lactam Antibiotics"
+                out.clinical_context = "Documented Penicillin Anaphylaxis/Allergy"
+                out.detected_contradictions.append(out.safety_reason)
+
+        return out

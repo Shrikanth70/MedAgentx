@@ -46,3 +46,44 @@ def test_generalized_retrieval_multi_domain():
     res_renal = retriever.retrieve("Severe acute kidney injury with hyperkalemia K 6.2 and oliguria")
     topics_renal = [c.get("clinical_topic", "") for c in res_renal["vector_evidence"]]
     assert any("Hyperkalemia" in t or "Kidney" in t or "Renal" in t for t in topics_renal)
+
+
+def test_vital_lab_safety_verifier():
+    """Verify safety verifier flags hemodynamic collapse, hyperkalemia, and allergy contraindications."""
+    from src.agents.verifier import VerifierAgent
+    from src.orchestrator.patient import PatientCase
+
+    verifier = VerifierAgent()
+
+    # Case A: Severe Hypotension Contraindication (SBP < 90)
+    pt_hypo = PatientCase(chief_complaint="Chest pain", sbp=82.0, dbp=48.0)
+    out_hypo = verifier.verify_patient(
+        query_text="Administer IV nitroglycerin and metoprolol",
+        vector_evidence=[{"content": "Nitroglycerin and beta blockers are first line for angina", "clinical_topic": "ACS"}],
+        patient=pt_hypo,
+    )
+    assert out_hypo.r_contra >= 0.80
+    assert out_hypo.safety_signal is True
+    assert out_hypo.contradiction_type == "CLINICAL_CONTRAINDICATION"
+    assert "hypotension" in out_hypo.safety_reason.lower()
+
+    # Case B: Severe Hyperkalemia Contraindication (K > 5.2)
+    pt_k = PatientCase(chief_complaint="Heart failure", potassium=5.8, egfr=24.0)
+    out_k = verifier.verify_patient(
+        query_text="Start spironolactone and sacubitril/valsartan",
+        vector_evidence=[{"content": "Spironolactone and ARNI are foundational GDMT", "clinical_topic": "HFrEF"}],
+        patient=pt_k,
+    )
+    assert out_k.r_contra >= 0.80
+    assert "hyperkalemia" in out_k.safety_reason.lower()
+
+    # Case C: Allergy Contraindication (Penicillin Allergy)
+    pt_allergy = PatientCase(chief_complaint="Pneumonia", allergies=["Penicillin"])
+    out_allergy = verifier.verify_patient(
+        query_text="Prescribe amoxicillin clavulanate or ampicillin",
+        vector_evidence=[{"content": "Amoxicillin and Ampicillin are standard beta lactams", "clinical_topic": "Pneumonia"}],
+        patient=pt_allergy,
+    )
+    assert out_allergy.r_contra >= 0.80
+    assert out_allergy.contradiction_type in ["ALLERGY_CONTRAINDICATION", "CLINICAL_CONTRAINDICATION"]
+    assert "penicillin" in out_allergy.safety_reason.lower() or "allergy" in out_allergy.safety_reason.lower()
