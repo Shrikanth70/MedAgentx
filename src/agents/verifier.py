@@ -345,4 +345,49 @@ class VerifierAgent:
                 out.clinical_context = "Documented Penicillin Anaphylaxis/Allergy"
                 out.detected_contradictions.append(out.safety_reason)
 
+        # 5. Multimodal Scan & Radiological Cross-Modal Safety Checking
+        imaging = getattr(patient, "imaging_analysis", None)
+        if imaging is not None:
+            imp_lower = imaging.diagnostic_impression.lower()
+            findings_lower = " ".join([f.lower() for f in imaging.radiological_findings])
+
+            # A. Pneumothorax on CXR -> Absolute Contraindication to Positive Pressure without Chest Tube
+            if "pneumothorax" in imp_lower or "pneumothorax" in findings_lower:
+                out.safety_signal = True
+                out.contradiction_type = "CLINICAL_CONTRAINDICATION"
+                out.safety_severity = "HIGH"
+                out.r_contra = 0.85
+                out.safety_reason = (
+                    "CRITICAL RADIOLOGICAL CONTRAINDICATION: Acute Pneumothorax detected on Chest Radiograph. "
+                    "Non-invasive positive-pressure ventilation (BiPAP/CPAP) and positive-pressure mechanical ventilation "
+                    "without prior tube thoracostomy are STRICTLY CONTRAINDICATED due to imminent tension physiology "
+                    "and fatal cardiovascular collapse. Immediate needle decompression or chest tube placement is required."
+                )
+                out.intervention = "Positive-Pressure Ventilation (BiPAP/CPAP)"
+                out.clinical_context = "Acute Pneumothorax on CXR"
+                out.detected_contradictions.append(out.safety_reason)
+
+            # B. Right Ventricular / Inferior STEMI on ECG -> Contraindicates Nitroglycerin / Preload Reducers
+            elif "rv infarction" in imp_lower or "right ventricular" in imp_lower or "v4r" in findings_lower:
+                out.safety_signal = True
+                out.contradiction_type = "CLINICAL_CONTRAINDICATION"
+                out.safety_severity = "HIGH"
+                out.r_contra = 0.85
+                out.safety_reason = (
+                    "CRITICAL CARDIOGRAPHIC CONTRAINDICATION: Acute Right Ventricular Myocardial Infarction detected on 12-lead ECG. "
+                    "Nitroglycerin, nitrates, and preload-reducing vasodilators are STRICTLY CONTRAINDICATED due to risk of "
+                    "profound refractory hypotension and shock. Maintain preload with intravenous normal saline resuscitation."
+                )
+                out.intervention = "Nitroglycerin / Nitrates"
+                out.clinical_context = "Acute RV Infarction on 12-Lead ECG"
+                out.detected_contradictions.append(out.safety_reason)
+
+            # C. Check general contraindicated interventions specified in scan analysis
+            elif imaging.contraindicated_interventions and out.r_contra < 0.70:
+                out.safety_signal = True
+                out.safety_severity = "MEDIUM"
+                out.r_contra = max(out.r_contra, 0.75)
+                for ci in imaging.contraindicated_interventions:
+                    out.detected_contradictions.append(f"SCAN SAFETY ALERT: {ci}")
+
         return out

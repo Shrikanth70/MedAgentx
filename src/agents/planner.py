@@ -63,7 +63,14 @@ class PlannerAgent:
         if getattr(patient, "is_hyperkalemic", False):
             entities.append("Hyperkalemia")
 
-        search_query = f"{patient.chief_complaint} {' '.join(patient.past_medical_history)} {patient.clinical_question}".strip()
+        imaging = getattr(patient, "imaging_analysis", None)
+        if imaging is not None:
+            if imaging.modality:
+                entities.append(imaging.modality)
+            if imaging.diagnostic_impression:
+                entities.append(imaging.diagnostic_impression)
+
+        search_query = f"{patient.chief_complaint} {getattr(imaging, 'diagnostic_impression', '')} {' '.join(patient.past_medical_history)} {patient.clinical_question}".strip()
 
         subqueries = [
             search_query,

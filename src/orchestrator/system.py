@@ -402,3 +402,65 @@ class MedAgentXSystem:
                 "router_reason": router_decision.reason if router_decision else "",
             },
         )
+
+    def query_multimodal(
+        self,
+        patient_text: str = "",
+        report_input: Any = None,
+        image_input: Any = None,
+    ) -> SystemResponse:
+        """Execute multimodal clinical decision support synthesizing scans, lab reports, and vignettes."""
+        from src.multimodal.contracts import MultimodalPatientCase
+        from src.multimodal.document_parser import ClinicalDocumentParser
+        from src.multimodal.imaging_analyzer import MedicalImagingAnalyzer
+        from src.orchestrator.patient import PatientCase, PatientVignetteParser
+
+        # 1. Parse patient clinical text or initialize baseline case
+        if patient_text:
+            base_patient = PatientVignetteParser.parse(patient_text)
+        else:
+            base_patient = PatientCase(
+                patient_id="PT-MM-01",
+                chief_complaint="Multimodal Diagnostic Consultation",
+                hpi="Clinical scan and laboratory evaluation submitted for ACMR decision support.",
+            )
+
+        # 2. Extract and incorporate structured lab values if report is uploaded
+        parsed_labs: dict[str, Any] = {}
+        if report_input:
+            parsed_labs = ClinicalDocumentParser.parse_report(report_input)
+            for lab_key, val in parsed_labs.items():
+                if hasattr(base_patient, lab_key):
+                    setattr(base_patient, lab_key, val)
+
+        # 3. Analyze medical imaging scans (Chest X-Rays, 12-lead ECGs, CTs)
+        imaging_analysis = None
+        if image_input:
+            analyzer = MedicalImagingAnalyzer()
+            hint = f"{base_patient.chief_complaint} {base_patient.hpi} {patient_text}"
+            imaging_analysis = analyzer.analyze(image_input=image_input, clinical_hint=hint)
+
+        # 4. Construct unified MultimodalPatientCase
+        multimodal_case = MultimodalPatientCase(
+            **base_patient.model_dump(),
+            imaging_analysis=imaging_analysis,
+            uploaded_document_text=str(report_input)[:1000] if report_input else "",
+            uploaded_file_name=str(image_input) if isinstance(image_input, str) else "uploaded_scan",
+        )
+
+        # 5. Route through ACMR patient clinical reasoning pipeline
+        res = self.query_patient(multimodal_case)
+
+        # 6. Inject multimodal metadata for API and Streamlit UI consumption
+        if imaging_analysis is not None:
+            res.metadata["imaging_modality"] = imaging_analysis.modality
+            res.metadata["imaging_impression"] = imaging_analysis.diagnostic_impression
+            res.metadata["imaging_urgency"] = imaging_analysis.critical_urgency
+            res.metadata["contraindicated_interventions"] = imaging_analysis.contraindicated_interventions
+            res.metadata["radiological_findings"] = imaging_analysis.radiological_findings
+
+        if parsed_labs:
+            res.metadata["parsed_labs"] = parsed_labs
+
+        return res
+

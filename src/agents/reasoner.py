@@ -173,30 +173,48 @@ class ReasonerAgent:
         # 2. Patient-Specific Treatment Recommendations
         rec_lines = []
         chief = getattr(patient, "chief_complaint", "").lower()
-        if "sepsis" in chief or "septic" in chief or getattr(patient, "is_in_septic_shock", False):
-            rec_lines.append("1. SURVIVING SEPSIS 1-HOUR BUNDLE: Measure/remeasure blood lactate. Blood cultures x2 prior to antibiotics.")
-            rec_lines.append("2. IMMEDIATE FLUID RESUSCITATION: Administer 30 mL/kg IV balanced crystalloid (Lactated Ringer's) within 3 hours for hypoperfusion.")
-            rec_lines.append("3. VASOPRESSOR PROTOCOL: Initiate Norepinephrine as first-line vasopressor to target MAP >= 65 mmHg.")
-            rec_lines.append("4. BROAD-SPECTRUM ANTIMICROBIALS: Administer IV broad-spectrum antibiotics within 1 hour of presentation.")
-        elif "heart failure" in chief or "hfref" in chief or "dyspnea" in chief or "orthopnea" in chief:
-            if getattr(patient, "is_hypotensive", False) or getattr(patient, "is_hyperkalemic", False):
-                rec_lines.append("1. ACUTE DECOMPENSATED STABILIZATION: Prioritize loop diuretic therapy (IV Furosemide) for volume overload without exacerbating hypotension.")
-                rec_lines.append("2. CARDIAC PRELOAD / OXYGENATION: Supplemental oxygen targeting SpO2 92-96%. Non-invasive ventilation (BiPAP/CPAP) if severe respiratory distress.")
-                rec_lines.append("3. GDMT TITRATION PHASE: Withhold or defer ACEi/ARNI/MRA and Beta-blockers until hemodynamic and electrolyte stabilization.")
+        imaging_analysis = getattr(patient, "imaging_analysis", None)
+
+        # Multimodal Scan Priority Adjustments
+        if imaging_analysis is not None:
+            imp_lower = imaging_analysis.diagnostic_impression.lower()
+            findings_str = " ".join([f.lower() for f in imaging_analysis.radiological_findings])
+
+            if "pneumothorax" in imp_lower or "pneumothorax" in findings_str:
+                rec_lines.append("1. EMERGENT CHEST TUBE / NEEDLE DECOMPRESSION: Immediate decompression of pneumothorax prior to any positive pressure ventilation.")
+                rec_lines.append("2. OXYGENATION & MONITORED TRANSPORT: High-flow non-rebreather oxygen; prepare for tube thoracostomy.")
+            elif "stemi" in imp_lower or "infarction" in imp_lower:
+                rec_lines.append("1. EMERGENCY PRIMARY PCI ACTIVATION: Immediate activation of cardiac catheterization laboratory (Door-to-Balloon < 90 min).")
+                rec_lines.append("2. ACUTE CORONARY PROTOCOL: Dual antiplatelet therapy (Aspirin 325 mg + P2Y12 inhibitor) and unfractionated heparin.")
+            elif "edema" in imp_lower:
+                rec_lines.append("1. INTRAVENOUS LOOP DIURETIC: Administer IV Furosemide (Lasix) 40-80 mg bolus to relieve alveolar fluid congestion.")
+                rec_lines.append("2. CARDIAC PRELOAD & RESPIRATORY SUPPORT: Supplemental oxygen; close blood pressure monitoring.")
+
+        if not rec_lines:
+            if "sepsis" in chief or "septic" in chief or getattr(patient, "is_in_septic_shock", False):
+                rec_lines.append("1. SURVIVING SEPSIS 1-HOUR BUNDLE: Measure/remeasure blood lactate. Blood cultures x2 prior to antibiotics.")
+                rec_lines.append("2. IMMEDIATE FLUID RESUSCITATION: Administer 30 mL/kg IV balanced crystalloid (Lactated Ringer's) within 3 hours for hypoperfusion.")
+                rec_lines.append("3. VASOPRESSOR PROTOCOL: Initiate Norepinephrine as first-line vasopressor to target MAP >= 65 mmHg.")
+                rec_lines.append("4. BROAD-SPECTRUM ANTIMICROBIALS: Administer IV broad-spectrum antibiotics within 1 hour of presentation.")
+            elif "heart failure" in chief or "hfref" in chief or "dyspnea" in chief or "orthopnea" in chief:
+                if getattr(patient, "is_hypotensive", False) or getattr(patient, "is_hyperkalemic", False):
+                    rec_lines.append("1. ACUTE DECOMPENSATED STABILIZATION: Prioritize loop diuretic therapy (IV Furosemide) for volume overload without exacerbating hypotension.")
+                    rec_lines.append("2. CARDIAC PRELOAD / OXYGENATION: Supplemental oxygen targeting SpO2 92-96%. Non-invasive ventilation (BiPAP/CPAP) if severe respiratory distress.")
+                    rec_lines.append("3. GDMT TITRATION PHASE: Withhold or defer ACEi/ARNI/MRA and Beta-blockers until hemodynamic and electrolyte stabilization.")
+                else:
+                    rec_lines.append("1. GDMT QUAD-THERAPY FOUR PILLARS: ARNI (Sacubitril/valsartan), Beta-blocker, MRA, and SGLT2i.")
+            elif "copd" in chief or "asthma" in chief or "wheezing" in chief:
+                rec_lines.append("1. CONTROLLED OXYGEN THERAPY: Titrate oxygen to strict target SpO2 88% to 92% (prevent hypercapnic respiratory arrest).")
+                rec_lines.append("2. DUAL INHALED BRONCHODILATORS: Nebulized Albuterol (SABA) 2.5 mg + Ipratropium (SAMA) 0.5 mg every 20-30 min x 3 doses.")
+                rec_lines.append("3. SYSTEMIC CORTICOSTEROIDS: Oral Prednisone 40 mg daily for 5 days.")
+                rec_lines.append("4. ANTIMICROBIAL COVERAGE: Azithromycin or Doxycycline if purulent sputum or increased volume present.")
+            elif "ketoacidosis" in chief or "dka" in chief:
+                rec_lines.append("1. INTRAVENOUS VOLUME EXPANSION: 0.9% Normal Saline at 1000 mL/hr initial resuscitation.")
+                rec_lines.append("2. POTASSIUM MANAGEMENT: Check K+ prior to insulin. If K+ < 3.3, hold insulin and replete K+. If K+ 3.3-5.2, add 20-30 mEq K+/L IV fluid.")
+                rec_lines.append("3. CONTINUOUS REGULAR INSULIN INFUSION: 0.1 units/kg/hr IV.")
             else:
-                rec_lines.append("1. GDMT QUAD-THERAPY FOUR PILLARS: ARNI (Sacubitril/valsartan), Beta-blocker, MRA, and SGLT2i.")
-        elif "copd" in chief or "asthma" in chief or "wheezing" in chief:
-            rec_lines.append("1. CONTROLLED OXYGEN THERAPY: Titrate oxygen to strict target SpO2 88% to 92% (prevent hypercapnic respiratory arrest).")
-            rec_lines.append("2. DUAL INHALED BRONCHODILATORS: Nebulized Albuterol (SABA) 2.5 mg + Ipratropium (SAMA) 0.5 mg every 20-30 min x 3 doses.")
-            rec_lines.append("3. SYSTEMIC CORTICOSTEROIDS: Oral Prednisone 40 mg daily for 5 days.")
-            rec_lines.append("4. ANTIMICROBIAL COVERAGE: Azithromycin or Doxycycline if purulent sputum or increased volume present.")
-        elif "ketoacidosis" in chief or "dka" in chief:
-            rec_lines.append("1. INTRAVENOUS VOLUME EXPANSION: 0.9% Normal Saline at 1000 mL/hr initial resuscitation.")
-            rec_lines.append("2. POTASSIUM MANAGEMENT: Check K+ prior to insulin. If K+ < 3.3, hold insulin and replete K+. If K+ 3.3-5.2, add 20-30 mEq K+/L IV fluid.")
-            rec_lines.append("3. CONTINUOUS REGULAR INSULIN INFUSION: 0.1 units/kg/hr IV.")
-        else:
-            rec_lines.append("1. EVIDENCE-GROUNDED GUIDELINE THERAPY: Initiate clinical protocol aligned with authoritative consensus guidelines.")
-            rec_lines.append("2. DIAGNOSTIC RE-EVALUATION: Continuous hemodynamic monitoring and repeated targeted testing.")
+                rec_lines.append("1. EVIDENCE-GROUNDED GUIDELINE THERAPY: Initiate clinical protocol aligned with authoritative consensus guidelines.")
+                rec_lines.append("2. DIAGNOSTIC RE-EVALUATION: Continuous hemodynamic monitoring and repeated targeted testing.")
 
         recs_block = "\n".join([f"  {r}" for r in rec_lines])
 
@@ -207,6 +225,11 @@ class ReasonerAgent:
                 safety_lines.append(f"⚠️ {c}")
         elif safety_reason:
             safety_lines.append(f"⚠️ {safety_reason}")
+
+        if imaging_analysis and imaging_analysis.contraindicated_interventions:
+            for ci in imaging_analysis.contraindicated_interventions:
+                if not any(ci in sl for sl in safety_lines):
+                    safety_lines.append(f"⚠️ SCAN SAFETY CONTRAINDICATION: {ci}")
 
         if getattr(patient, "allergies", []):
             safety_lines.append(f"⚠️ ALLERGY ALERT: Patient allergic to {', '.join(patient.allergies)}. All cross-reactive agents strictly contraindicated.")
@@ -222,6 +245,17 @@ class ReasonerAgent:
         ]
         orders_block = "\n".join([f"  • {o}" for o in orders])
 
+        # 5. Multimodal Scan Section
+        scan_section = ""
+        if imaging_analysis is not None:
+            findings_bullets = "\n".join([f"  • {f}" for f in imaging_analysis.radiological_findings])
+            scan_section = (
+                f"\nVI. MULTIMODAL DIAGNOSTIC SCAN INTERPRETATION:\n"
+                f"  Modality: {imaging_analysis.modality} | Urgency: {imaging_analysis.critical_urgency} | AI Confidence: {imaging_analysis.confidence:.2f}\n"
+                f"  Impression: {imaging_analysis.diagnostic_impression}\n"
+                f"  Radiological/Cardiographic Findings:\n{findings_bullets}\n"
+            )
+
         report = (
             f"================================================================================\n"
             f"PATIENT-SPECIFIC CLINICAL DECISION SUPPORT REPORT (MedAgentX ACMR Engine)\n"
@@ -232,7 +266,8 @@ class ReasonerAgent:
             f"I. CLINICAL TRIAGE & ACUTE RISK STRATIFICATION:\n{triage_block}\n\n"
             f"II. EVIDENCE-GROUNDED CLINICAL RECOMMENDATIONS:\n{recs_block}\n\n"
             f"III. PATIENT SAFETY CONSTRAINTS & WITHHELD MEDICATIONS:\n{safety_block}\n\n"
-            f"IV. IMMEDIATE MONITORING & DIAGNOSTIC WORKUP:\n{orders_block}\n\n"
+            f"IV. IMMEDIATE MONITORING & DIAGNOSTIC WORKUP:\n{orders_block}\n"
+            f"{scan_section}\n"
             f"V. RETRIEVED GUIDELINE CITATIONS:\n"
             f"{evidence_summary[:400]}...\n"
             f"================================================================================"

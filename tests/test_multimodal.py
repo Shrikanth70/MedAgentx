@@ -56,3 +56,20 @@ def test_imaging_analyzer_cxr_and_ecg():
     assert any("positive pressure" in c.lower() or "positive-pressure" in c.lower() for c in analysis_ptx.contraindicated_interventions)
 
 
+def test_cross_modal_acmr_safety_and_reasoning():
+    from src.orchestrator.system import MedAgentXSystem
+
+    system = MedAgentXSystem()
+
+    # Test Multimodal Consultation: Patient with dyspnea, CXR showing Pneumothorax
+    res = system.query_multimodal(
+        patient_text="42yo male following motor vehicle collision with sudden right-sided chest pain and shortness of breath.",
+        image_input="sample_cxr_pneumothorax.png",
+    )
+    assert res.system_id == "PROPOSED_MEDAGENTX"
+    assert res.metadata.get("route_decision") in ["SAFETY_CONSTRAINT", "HARD_ABSTENTION"]
+    assert "PNEUMOTHORAX" in res.answer.upper() or "CHEST TUBE" in res.answer.upper()
+    assert "POSITIVE PRESSURE" in res.answer.upper() or "VENTILATION" in res.answer.upper()
+
+
+
