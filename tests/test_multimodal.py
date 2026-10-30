@@ -35,3 +35,24 @@ def test_clinical_document_parser_tabular_labs():
     assert parsed_labs["troponin"] == 0.42
     assert parsed_labs["wbc"] == 17.8
 
+
+def test_imaging_analyzer_cxr_and_ecg():
+    from src.multimodal.imaging_analyzer import MedicalImagingAnalyzer
+
+    analyzer = MedicalImagingAnalyzer()
+
+    # Test Case A: Chest X-Ray with Lobar Pneumonia
+    analysis_cxr = analyzer.analyze("sample_cxr_pneumonia.png", clinical_hint="Chest X-Ray showing fever and cough")
+    assert "Pneumonia" in analysis_cxr.diagnostic_impression or "Consolidation" in analysis_cxr.diagnostic_impression
+    assert any("consolidation" in f.lower() or "opacity" in f.lower() for f in analysis_cxr.radiological_findings)
+
+    # Test Case B: 12-Lead ECG with Acute Anterior STEMI
+    analysis_ecg = analyzer.analyze("sample_ecg_stemi.png", clinical_hint="12-Lead ECG for acute chest pain")
+    assert "STEMI" in analysis_ecg.diagnostic_impression or "Myocardial Infarction" in analysis_ecg.diagnostic_impression
+    assert analysis_ecg.critical_urgency == "EMERGENT"
+
+    # Test Case C: Pneumothorax Visual Safety Contraindication
+    analysis_ptx = analyzer.analyze("sample_cxr_pneumothorax.png", clinical_hint="Severe chest trauma, acute dyspnea, pneumothorax")
+    assert any("positive pressure" in c.lower() or "positive-pressure" in c.lower() for c in analysis_ptx.contraindicated_interventions)
+
+
