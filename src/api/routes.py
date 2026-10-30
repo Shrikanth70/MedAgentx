@@ -25,6 +25,13 @@ class ConsultRequest(BaseModel):
     system_id: str = "medagentx"  # "medagentx", "b0", "b1", "b2", "b7"
 
 
+class PatientConsultRequest(BaseModel):
+    """Patient clinical vignette or structured case consultation payload."""
+
+    vignette_text: str = ""
+    patient_data: dict[str, Any] | None = None
+
+
 @router.get("/health", tags=["Health"])
 async def root_health():
     """Root health check endpoint."""
@@ -79,5 +86,35 @@ async def consult_clinical_decision(payload: ConsultRequest) -> dict[str, Any]:
             "retrieval_rounds": res.metadata.get("retrieval_rounds", 1),
             "route_decision": res.metadata.get("route_decision", "N/A"),
         },
+        "trace": res.metadata.get("trace", []),
+    }
+
+
+@router.post("/api/v1/patient-consult", tags=["Clinical CDSS"])
+async def patient_consult_decision(payload: PatientConsultRequest) -> dict[str, Any]:
+    """Execute real-world patient decision support consultation with vital & lab safety guards."""
+    from src.orchestrator.patient import PatientCase, PatientVignetteParser
+
+    if payload.patient_data:
+        patient = PatientCase(**payload.patient_data)
+    elif payload.vignette_text:
+        patient = PatientVignetteParser.parse(payload.vignette_text)
+    else:
+        patient = PatientCase(chief_complaint="General Clinical Consultation")
+
+    res = _get_system().query_patient(patient)
+
+    return {
+        "system_id": res.system_id,
+        "patient_id": getattr(patient, "patient_id", "PT-001"),
+        "chief_complaint": getattr(patient, "chief_complaint", ""),
+        "report": res.answer,
+        "confidence": res.confidence,
+        "route_decision": res.metadata.get("route_decision", "N/A"),
+        "safety_severity": res.metadata.get("safety_severity", "NONE"),
+        "contradiction_type": res.metadata.get("contradiction_type", "NONE"),
+        "latency_seconds": res.latency_seconds,
+        "token_count": res.token_count,
+        "citations": res.citations,
         "trace": res.metadata.get("trace", []),
     }

@@ -1,6 +1,7 @@
 """MedAgentX Orchestrator System Entrypoint with Adaptive State & Observability."""
 
 import time
+from typing import Any
 import structlog
 from config.settings import settings
 from src.agents.planner import PlannerAgent
@@ -277,5 +278,127 @@ class MedAgentXSystem:
                 "evidence_conflict": acmr_state["evidence_conflict"],
                 "clinical_context": acmr_state["clinical_context"],
                 "intervention": acmr_state["intervention"],
+            },
+        )
+
+    def query_patient(self, patient_or_text: Any) -> SystemResponse:
+        """Execute real-world patient clinical decision support through ACMR pipeline."""
+        from src.orchestrator.patient import PatientCase, PatientVignetteParser
+
+        if isinstance(patient_or_text, str):
+            patient = PatientVignetteParser.parse(patient_or_text)
+        elif isinstance(patient_or_text, dict):
+            patient = PatientCase(**patient_or_text)
+        else:
+            patient = patient_or_text
+
+        start_time = time.time()
+        trace = []
+        active_agents = 0
+
+        # Step 1: Agent 1 (Planner for Patient)
+        plan = self.planner.plan_patient(patient)
+        active_agents += 1
+        trace.append(f"Activated Agent 1: Clinical Vignette Planner for Patient {getattr(patient, 'patient_id', 'PT-001')}")
+
+        iteration = 0
+        c_total = 0.0
+        delta_c = 0.0
+        current_query = plan.original_query
+        action = "RE_RETRIEVE"
+        verifier_output = None
+        router_decision = None
+        previous_chunks: list[dict[str, Any]] = []
+
+        while iteration <= settings.MAX_RETRIEVAL_ITERATIONS and action in ["RE_RETRIEVE", "TARGETED_RE_RETRIEVE", "QUERY_REWRITE_RE_RETRIEVE", "RESOLVE_CONTRADICTION"]:
+            # Step B: Agent 2 (Retriever)
+            retrieval_res = self.retriever.retrieve_evidence(
+                query_text=current_query, entities=plan.extracted_entities
+            )
+            active_agents += 1
+            curr_chunks = retrieval_res.vector_evidence
+
+            # Step C: Agent 3 (Verifier with Patient Vital & Lab Safety Guard)
+            verifier_output = self.verifier.verify_patient(
+                query_text=current_query,
+                vector_evidence=curr_chunks,
+                patient=patient,
+                graph_evidence=retrieval_res.graph_evidence,
+                previous_chunks=previous_chunks,
+            )
+            active_agents += 1
+
+            # Step D: Composite Confidence Calculation
+            c_total = ConfidenceCalculator.calculate_composite_confidence(
+                s_vec=retrieval_res.s_vec,
+                s_graph=retrieval_res.s_graph,
+                v_agree=verifier_output.v_agree,
+                r_contra=verifier_output.r_contra,
+                s_rel=verifier_output.s_rel,
+                completeness=verifier_output.evidence_completeness,
+                novelty=verifier_output.evidence_novelty,
+                contradiction_type=verifier_output.contradiction_type,
+            )
+
+            # Step E: ACMR Dynamic Router
+            router_decision = self.router.route_explainable(
+                c_total=c_total,
+                delta_c=0.0,
+                retrieval_gap=verifier_output.retrieval_gap,
+                missing_evidence=verifier_output.missing_evidence,
+                s_rel=verifier_output.s_rel,
+                r_contra=verifier_output.r_contra,
+                contradiction_type=verifier_output.contradiction_type,
+                safety_severity=verifier_output.safety_severity,
+                evidence_novelty=verifier_output.evidence_novelty,
+                evidence_overlap=0.0,
+                iteration=iteration,
+            )
+            action = router_decision.action
+            trace.append(f"Iteration {iteration} -> {action}: {router_decision.reason}")
+
+            previous_chunks.extend(curr_chunks)
+
+            if action in ["STOP_CONFIDENT", "STOP_SATURATED", "STOP_MAX_ITERATIONS", "SAFETY_CONSTRAINT", "HARD_ABSTENTION"]:
+                break
+
+            iteration += 1
+
+        # Step F: Agent 4 (Reasoner with Tailored Patient Synthesis)
+        active_agents += 1
+        trace.append(f"Activated Agent 4: Patient-Tailored Reasoner (Action: {action})")
+
+        reasoner_output = self.reasoner.synthesize_patient_report(
+            patient=patient,
+            verified_evidence=verifier_output.verified_evidence if verifier_output else [],
+            detected_contradictions=verifier_output.detected_contradictions if verifier_output else [],
+            c_total=c_total,
+            mode=action,
+            safety_reason=router_decision.reason if router_decision else "",
+        )
+
+        latency = time.time() - start_time
+        token_count = len(patient.summarize_clinical_state().split()) + len(reasoner_output.clinical_report.split())
+
+        return SystemResponse(
+            system_id=self.system_id,
+            query=getattr(patient, "chief_complaint", "") or current_query,
+            answer=reasoner_output.clinical_report,
+            evidence_chunks=verifier_output.verified_evidence if verifier_output else [],
+            citations=reasoner_output.citations,
+            confidence=c_total,
+            latency_seconds=round(latency, 4),
+            token_count=token_count,
+            metadata={
+                "c_total": c_total,
+                "delta_c": delta_c,
+                "retrieval_rounds": iteration,
+                "route_decision": action,
+                "active_agent_count": active_agents,
+                "trace": trace,
+                "s_rel": verifier_output.s_rel if verifier_output else 0.0,
+                "contradiction_type": verifier_output.contradiction_type if verifier_output else "NONE",
+                "safety_severity": verifier_output.safety_severity if verifier_output else "NONE",
+                "router_reason": router_decision.reason if router_decision else "",
             },
         )

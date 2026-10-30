@@ -100,44 +100,57 @@ def main():
     with col_h2:
         st.info("🟢 System Ready\nLLM: Ollama llama3.2")
 
-    # Scenario Presets — 5 canonical test cases
+    # Scenario Presets — Diverse Real-World Patient Cases & Clinical Vignettes
     scenarios = {
-        "Select a Preset Clinical Case...": "",
-        "Test 1: HFrEF Baseline Quad-Therapy (STOP_CONFIDENT)": (
-            "What is the baseline quad-therapy regimen for heart failure with reduced ejection fraction HFrEF?"
+        "Select a Realistic Patient Presentation...": "",
+        "Case 1 (Emergency): Septic Shock with Acute Kidney Injury (Lactate 3.8, BP 82/48, eGFR 28)": (
+            "68-year-old male presenting with acute altered mental status, rigors, and suspected urosepsis. "
+            "Vitals: BP 82/48 mmHg, HR 124 bpm, RR 28, SpO2 91% on room air, Temp 39.1 C. "
+            "Labs: Serum Lactate 3.8 mmol/L, eGFR 28 mL/min, Creatinine 2.6 mg/dL, WBC 18,500. "
+            "History of Type 2 Diabetes, CKD Stage 3b. Current meds: Metformin 1000mg BID. "
+            "Question: What is the immediate fluid resuscitation, vasopressor choice, and antimicrobial protocol?"
         ),
-        "Test 2: STEMI Acute DAPT Loading (NORMAL Synthesis)": (
-            "A 62-year-old male presents with severe substernal chest pressure radiating to the left arm. "
-            "ECG shows ST-segment elevation in leads V1-V4. What is the immediate dual antiplatelet loading dose?"
+        "Case 2 (ICU/Cardio): Decompensated HFrEF with Severe Hyperkalemia (K+ 5.8, eGFR 22, BP 86/52)": (
+            "72-year-old male with acute worsening dyspnea, orthopnea, and bilateral pedal edema. "
+            "Vitals: BP 86/52 mmHg, HR 112 bpm, SpO2 87% on room air. "
+            "Labs: Serum Potassium K+ 5.8 mEq/L, eGFR 22 mL/min, Creatinine 3.1 mg/dL, elevated BNP. "
+            "History of HFrEF (LVEF 25%), CKD Stage 4. "
+            "Question: What GDMT medications should be withheld or initiated for acute stabilization?"
         ),
-        "Test 3: RV Infarction + Nitroglycerin (SAFETY_CONSTRAINT)": (
-            "Administer sublingual nitroglycerin for severe chest pain in a patient with right ventricular infarction."
+        "Case 3 (Inpatient): Severe CAP with Documented Anaphylactic Penicillin Allergy": (
+            "58-year-old female admitted with severe community-acquired pneumonia, pleuritic chest pain, and purulent sputum. "
+            "Vitals: BP 118/74 mmHg, HR 98 bpm, SpO2 92% on 2L nasal cannula, Temp 38.8 C. "
+            "Documented Allergies: Anaphylactic Penicillin Allergy (urticaria and airway swelling). "
+            "Question: What is the recommended inpatient empiric antimicrobial regimen avoiding beta-lactams?"
         ),
-        "Test 4: Normoxic STEMI Oxygen Conflict (EVIDENCE_CONFLICT)": (
-            "Should routine supplemental oxygen be administered in normoxic acute STEMI patients?"
+        "Case 4 (Pulmonology): Acute COPD Exacerbation with Hypercapnic Respiratory Risk": (
+            "66-year-old male with severe COPD presenting with acute breathlessness, wheezing, and purulent sputum. "
+            "Vitals: BP 136/82 mmHg, HR 102 bpm, SpO2 84% on room air. Arterial blood gas shows PaCO2 56 mmHg. "
+            "Question: What is the targeted oxygen saturation range, bronchodilator regimen, and systemic steroid protocol?"
         ),
-        "Test 5: Syndrome X Unknown (INSUFFICIENT_EVIDENCE)": (
-            "What is the optimal treatment protocol for cardiac syndrome X with microvascular dysfunction?"
+        "Case 5 (Safety Alert): Right Ventricular STEMI with Hypotension Risk": (
+            "54-year-old male presenting with acute inferior STEMI and Right Ventricular Infarction. "
+            "BP 94/60 mmHg, HR 88 bpm. Clinician orders sublingual nitroglycerin for persistent chest discomfort."
         ),
     }
 
-    selected_scenario = st.selectbox("📌 Quick Select Clinical Presentation Preset:", list(scenarios.keys()))
+    selected_scenario = st.selectbox("📌 Select Realistic Clinical Patient Vignette or Enter Custom Below:", list(scenarios.keys()))
     default_text = scenarios[selected_scenario] if selected_scenario else ""
 
     # Query Input
-    query_text = st.text_area("✍️ Enter Patient Case Presentation / Clinical Query:", value=default_text, height=120)
+    query_text = st.text_area("✍️ Patient Presentation / Clinical Admission Note / Vignette:", value=default_text, height=140)
 
-    btn_run = st.button("⚡ Run ACMR Clinical Consultation")
+    btn_run = st.button("⚡ Run ACMR Clinical Consultation & Patient Safety Evaluation")
 
     if btn_run:
         if not query_text.strip():
-            st.warning("Please enter a clinical query or select a preset case.")
+            st.warning("Please enter a clinical patient presentation or select a preset case.")
             return
 
         system = get_system()
 
-        with st.spinner("Executing Adaptive ACMR dynamic loop with Ollama llama3.2..."):
-            res = system.query(query_text)
+        with st.spinner("Executing Adaptive ACMR dynamic loop across multi-specialty guidelines..."):
+            res = system.query_patient(query_text)
 
         # Extract metadata
         c_total = res.confidence

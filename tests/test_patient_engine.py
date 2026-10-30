@@ -87,3 +87,31 @@ def test_vital_lab_safety_verifier():
     assert out_allergy.r_contra >= 0.80
     assert out_allergy.contradiction_type in ["ALLERGY_CONTRAINDICATION", "CLINICAL_CONTRAINDICATION"]
     assert "penicillin" in out_allergy.safety_reason.lower() or "allergy" in out_allergy.safety_reason.lower()
+
+
+def test_medagentx_system_real_patient_execution():
+    """Verify full ACMR orchestrator runs over real-world clinical patient presentation."""
+    from src.orchestrator.system import MedAgentXSystem
+    from src.orchestrator.patient import PatientCase
+
+    system = MedAgentXSystem()
+
+    pt = PatientCase(
+        patient_id="PT-TEST-01",
+        age=68,
+        sex="Male",
+        chief_complaint="Septic Shock and Suspected Urosepsis",
+        sbp=82.0,
+        dbp=48.0,
+        hr=122.0,
+        spo2=91.0,
+        lactate=3.8,
+        egfr=28.0,
+        clinical_question="What is the immediate resuscitation and antimicrobial management protocol?"
+    )
+    res = system.query_patient(pt)
+    assert res.system_id == "PROPOSED_MEDAGENTX"
+    assert res.confidence > 0.0
+    assert "CLINICAL" in res.answer or "REPORT" in res.answer or "SAFETY ALERT" in res.answer
+    assert res.token_count > 0
+    assert "trace" in res.metadata
