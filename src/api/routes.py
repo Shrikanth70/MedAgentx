@@ -32,6 +32,15 @@ class PatientConsultRequest(BaseModel):
     patient_data: dict[str, Any] | None = None
 
 
+class MultimodalConsultRequest(BaseModel):
+    """Multimodal clinical consultation request with text, lab report, and scan reference."""
+
+    patient_text: str = ""
+    report_text: str = ""
+    image_path_or_name: str = ""
+
+
+
 @router.get("/health", tags=["Health"])
 async def root_health():
     """Root health check endpoint."""
@@ -118,3 +127,34 @@ async def patient_consult_decision(payload: PatientConsultRequest) -> dict[str, 
         "citations": res.citations,
         "trace": res.metadata.get("trace", []),
     }
+
+
+@router.post("/api/v1/multimodal-consult", tags=["Clinical CDSS"])
+async def multimodal_consult_decision(payload: MultimodalConsultRequest) -> dict[str, Any]:
+    """Execute multimodal diagnostic consultation analyzing scans, lab panels, and clinical text."""
+    res = _get_system().query_multimodal(
+        patient_text=payload.patient_text,
+        report_input=payload.report_text,
+        image_input=payload.image_path_or_name,
+    )
+
+    return {
+        "system_id": res.system_id,
+        "query": res.query,
+        "report": res.answer,
+        "confidence": res.confidence,
+        "route_decision": res.metadata.get("route_decision", "N/A"),
+        "safety_severity": res.metadata.get("safety_severity", "NONE"),
+        "contradiction_type": res.metadata.get("contradiction_type", "NONE"),
+        "imaging_modality": res.metadata.get("imaging_modality"),
+        "imaging_impression": res.metadata.get("imaging_impression"),
+        "imaging_urgency": res.metadata.get("imaging_urgency"),
+        "contraindicated_interventions": res.metadata.get("contraindicated_interventions", []),
+        "radiological_findings": res.metadata.get("radiological_findings", []),
+        "parsed_labs": res.metadata.get("parsed_labs", {}),
+        "latency_seconds": res.latency_seconds,
+        "token_count": res.token_count,
+        "citations": res.citations,
+        "trace": res.metadata.get("trace", []),
+    }
+
