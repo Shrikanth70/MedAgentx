@@ -29,7 +29,7 @@ class PlannerAgent:
         logger.info("Executing Agent 1 (Planner)", query=query_text)
 
         # Extract medical terms/entities via regex & heuristics
-        words = re.findall(r"\b[A-Z][a-zA-Z0-9\-]+\b|\b(?:STEMI|NSTEMI|ACS|DAPT|HFrEF|SGLT2|CAP|eGFR)\b", query_text)
+        words = re.findall(r"\b[A-Z][a-zA-Z0-9\-]+\b|\b(?:STEMI|NSTEMI|ACS|DAPT|HFrEF|SGLT2|CAP|eGFR|AKI|COPD|DKA|Sepsis)\b", query_text, re.IGNORECASE)
         extracted_entities = list(set(words)) if words else ["General Clinical"]
 
         # Decompose subqueries
@@ -44,6 +44,38 @@ class PlannerAgent:
             rephrased_query=query_text,
             decomposed_subqueries=subqueries,
             extracted_entities=extracted_entities,
+            retrieval_strategy="hybrid",
+        )
+
+    def plan_patient(self, patient: Any) -> PlannerOutput:
+        """Decompose clinical presentation of a real patient and formulate targeted queries."""
+        summary = patient.summarize_clinical_state()
+        logger.info("Executing Agent 1 for Real Patient Case", patient_id=getattr(patient, "patient_id", "PT-001"))
+
+        # Extract focal diseases and conditions
+        entities = list(getattr(patient, "past_medical_history", []))
+        if getattr(patient, "chief_complaint", ""):
+            entities.append(patient.chief_complaint)
+        if getattr(patient, "is_hypotensive", False):
+            entities.append("Hypotension")
+        if getattr(patient, "is_severe_renal_impairment", False):
+            entities.append("Acute Kidney Injury")
+        if getattr(patient, "is_hyperkalemic", False):
+            entities.append("Hyperkalemia")
+
+        search_query = f"{patient.chief_complaint} {' '.join(patient.past_medical_history)} {patient.clinical_question}".strip()
+
+        subqueries = [
+            search_query,
+            f"Guideline management for {patient.chief_complaint}",
+            f"Contraindications in {patient.chief_complaint} with eGFR {patient.egfr or 'normal'} and BP {patient.sbp or 'normal'}",
+        ]
+
+        return PlannerOutput(
+            original_query=search_query,
+            rephrased_query=summary,
+            decomposed_subqueries=subqueries,
+            extracted_entities=list(set(entities)) if entities else ["Clinical Evaluation"],
             retrieval_strategy="hybrid",
         )
 
