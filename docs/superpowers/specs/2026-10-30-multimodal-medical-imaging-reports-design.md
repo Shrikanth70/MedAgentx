@@ -130,3 +130,4 @@ class MultimodalPatientCase(PatientCase):
    - All existing 33 pytest tests continue to pass with 100% success.
 3. **End-to-End Execution**:
    - `python scripts/demo_multimodal.py` executes successfully and prints full multimodal reports.
+
