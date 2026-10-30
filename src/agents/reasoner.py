@@ -189,6 +189,20 @@ class ReasonerAgent:
             elif "edema" in imp_lower:
                 rec_lines.append("1. INTRAVENOUS LOOP DIURETIC: Administer IV Furosemide (Lasix) 40-80 mg bolus to relieve alveolar fluid congestion.")
                 rec_lines.append("2. CARDIAC PRELOAD & RESPIRATORY SUPPORT: Supplemental oxygen; close blood pressure monitoring.")
+            elif "hemorrhage" in imp_lower or "bleed" in imp_lower or "hematoma" in imp_lower:
+                rec_lines.append("1. EMERGENT NEUROSURGICAL CONSULTATION: Immediate neurosurgical evaluation for operative decompression / hematoma evacuation.")
+                rec_lines.append("2. ACUTE BLOOD PRESSURE TARGET: Rapidly titrate IV antihypertensives (Nicardipine / Labetalol) to target SBP 130-140 mmHg.")
+                rec_lines.append("3. REVERSAL OF COAGULOPATHY: Immediate reversal of anticoagulation (4F-PCC / Vitamin K / Specific antidotes); withhold all antiplatelets.")
+                rec_lines.append("4. INTRACRANIAL PRESSURE (ICP) BUNDLE: Elevate head of bed 30 degrees, maintain normothermia, and avoid venous compression.")
+            elif "stroke" in imp_lower or "ischemi" in imp_lower or "dwi" in imp_lower:
+                rec_lines.append("1. EMERGENT CODE STROKE ACTIVATION: Verify exact symptom onset window (< 4.5 hours for IV thrombolysis; < 24 hours for EVT).")
+                rec_lines.append("2. ENDOVASCULAR THROMBECTOMY (EVT): Perform emergent angiographic vessel assessment to identify large vessel occlusion (LVO).")
+                rec_lines.append("3. PERMISSIVE HYPERTENSION: Allow permissive hypertension (up to 220/120 mmHg if non-thrombolysis) to maintain penumbral perfusion.")
+            elif "obstruction" in imp_lower:
+                rec_lines.append("1. GASTROINTESTINAL DECOMPRESSION: Place wide-bore nasogastric tube to low continuous suction; strict NPO status.")
+                rec_lines.append("2. ISOTONIC VOLUME EXPANSION: Aggressive IV balanced crystalloid resuscitation to correct third-space volume depletion.")
+                rec_lines.append("3. GENERAL SURGICAL CONSULTATION: Emergent surgical consult for closed-loop strangulation/perforation assessment.")
+
 
         if not rec_lines:
             if "sepsis" in chief or "septic" in chief or getattr(patient, "is_in_septic_shock", False):

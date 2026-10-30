@@ -89,5 +89,19 @@
     "clinical_topic": "Inpatient Severe CAP & Penicillin Allergy Protocols",
     "disease_category": "Infectious Disease (Pneumonia)",
     "content": "For hospitalized patients with severe Community-Acquired Pneumonia (CAP) without risk factors for MRSA or Pseudomonas: Standard therapy is IV Beta-lactam (Ceftriaxone 1-2g daily or Ampicillin/sulbactam) PLUS a Macrolide (IV Azithromycin 500mg daily). PENICILLIN ALLERGY PROTOCOL: In patients with a documented severe/anaphylactic penicillin or beta-lactam allergy, beta-lactams must be avoided. The recommended alternative regimen is monotherapy with an IV respiratory fluoroquinolone: Levofloxacin 750 mg daily or Moxifloxacin 400 mg daily, OR Aztreonam plus Levofloxacin."
+  },
+  {
+    "chunk_id": "chunk_stroke_001",
+    "source": "2019 AHA/ASA Guidelines for the Early Management of Patients With Acute Ischemic Stroke",
+    "clinical_topic": "Acute Ischemic Stroke & Thrombolysis / Thrombectomy Protocol",
+    "disease_category": "Neurology (Stroke & Cerebrovascular Disease)",
+    "content": "In patients with acute ischemic stroke: 1) Intravenous Thrombolysis: Administer IV Alteplase (0.9 mg/kg) or Tenecteplase for eligible patients within 4.5 hours of symptom onset. Strict Contraindication: Absolute exclusion if CT/MRI demonstrates acute intracranial hemorrhage or large established hypodensity. 2) Endovascular Thrombectomy (EVT): Indicated for acute ischemic stroke due to large vessel occlusion (LVO) in the anterior circulation within 6 to 24 hours. 3) Blood Pressure Management: Maintain blood pressure below 185/110 mmHg prior to thrombolysis; for non-thrombolysis candidates, allow permissive hypertension up to 220/120 mmHg to preserve collateral perfusion."
+  },
+  {
+    "chunk_id": "chunk_hydrocephalus_001",
+    "source": "AAN Practice Guideline: Diagnosis and Management of Normal Pressure Hydrocephalus",
+    "clinical_topic": "Hydrocephalus & Ventriculomegaly Evaluation Protocol",
+    "disease_category": "Neurology & Neurosurgery (Hydrocephalus)",
+    "content": "Evaluation of Communicating Hydrocephalus / Normal Pressure Hydrocephalus (NPH): 1) Diagnostic Imaging: Brain MRI demonstrates ventricular enlargement out of proportion to sulcal enlargement, with an Evans index > 0.30 and periventricular hyperintensity reflecting transependymal CSF resorption. 2) Clinical Correlation: Characteristic clinical triad of progressive gait disturbance, cognitive impairment, and urinary urgency/incontinence. 3) Diagnostic Intervention: High-volume lumbar puncture (30-50 mL CSF tap test) with quantitative pre- and post-tap gait evaluation. 4) Definitive Treatment: Ventriculoperitoneal (VP) shunt placement in responsive candidates."
   }
 ]

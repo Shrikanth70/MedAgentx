@@ -186,7 +186,23 @@ def main():
                 "img": "",
                 "report": "data/samples/sample_lab_report.txt",
             },
+            "Sample Study 6: Head CT — Acute Intracranial Hemorrhage (tPA Contraindication)": {
+                "text": "64-year-old male with acute collapse, right hemiparesis, and coma. Clinician orders Head CT and considers IV Alteplase (tPA).",
+                "img": "data/datasets/medical_imaging/ct/ct_img_108.jpg",
+                "report": "",
+            },
+            "Sample Study 7: Brain MRI — Acute Ischemic Stroke (DWI Restriction / Code Stroke)": {
+                "text": "58-year-old female presenting with 90-minute history of sudden right facial droop and expressive aphasia. Brain MRI shows acute DWI restriction.",
+                "img": "data/datasets/medical_imaging/mri/mri_img_389.jpg",
+                "report": "",
+            },
+            "Sample Study 8: Brain MRI — Ventriculomegaly & Communicating Hydrocephalus": {
+                "text": "73-year-old male with progressive gait instability, urinary incontinence, and memory decline. Brain MRI shows marked ventriculomegaly with Evans index > 0.32.",
+                "img": "data/datasets/medical_imaging/mri/mri_img_170.jpg",
+                "report": "",
+            },
         }
+
 
         selected_mm = st.selectbox("🎯 Load Sample Diagnostic Scan & Lab Case:", list(mm_presets.keys()), key="sb_tab2")
         preset_info = mm_presets[selected_mm]

@@ -72,4 +72,46 @@ def test_cross_modal_acmr_safety_and_reasoning():
     assert "POSITIVE PRESSURE" in res.answer.upper() or "VENTILATION" in res.answer.upper()
 
 
+def test_imaging_analyzer_ct_and_mri():
+    from src.multimodal.imaging_analyzer import MedicalImagingAnalyzer
+
+    analyzer = MedicalImagingAnalyzer()
+
+    # Test Case A: Head CT with Intracranial Hemorrhage
+    analysis_ct = analyzer.analyze("ct_scan_head_bleed.png", clinical_hint="Head CT showing hyperdense acute intracranial hemorrhage with mass effect")
+    assert "CT Scan" in analysis_ct.modality
+    assert "Hemorrhage" in analysis_ct.diagnostic_impression
+    assert analysis_ct.critical_urgency == "EMERGENT"
+    assert any("thrombolytic" in c.lower() or "alteplase" in c.lower() for c in analysis_ct.contraindicated_interventions)
+
+    # Test Case B: Brain MRI with Acute Stroke (DWI Restriction)
+    analysis_mri = analyzer.analyze("brain_mri_dwi_stroke.png", clinical_hint="Brain MRI showing DWI diffusion restriction in left MCA territory without bleed")
+    assert "MRI" in analysis_mri.modality
+    assert "Infarction" in analysis_mri.diagnostic_impression or "Ischemic" in analysis_mri.diagnostic_impression
+    assert analysis_mri.critical_urgency == "EMERGENT"
+
+    # Test Case C: Abdominal CT with Bowel Obstruction
+    analysis_sbo = analyzer.analyze("abdomen_ct_axial.png", clinical_hint="Abdomen CT showing dilated bowel loops and high-grade mechanical bowel obstruction")
+    assert "CT Scan" in analysis_sbo.modality
+    assert "Obstruction" in analysis_sbo.diagnostic_impression
+    assert any("npo" in c.lower() or "oral intake" in c.lower() for c in analysis_sbo.contraindicated_interventions)
+
+
+def test_cross_modal_head_ct_hemorrhage_contraindication():
+    from src.orchestrator.system import MedAgentXSystem
+
+    system = MedAgentXSystem()
+
+    # Acute Head CT Hemorrhage: Clinician considering IV Alteplase (tPA)
+    res = system.query_multimodal(
+        patient_text="67yo female presenting with sudden right hemiplegia and aphasia. Emergency physician orders Head CT and prepares IV Alteplase (tPA).",
+        image_input="head_ct_acute_hemorrhage.png",
+    )
+    assert res.system_id == "PROPOSED_MEDAGENTX"
+    assert res.metadata.get("route_decision") in ["SAFETY_CONSTRAINT", "HARD_ABSTENTION"]
+    assert "HEMORRHAGE" in res.answer.upper()
+    assert "THROMBOLYTIC" in res.answer.upper() or "ALTEPLASE" in res.answer.upper() or "CONTRAINDICATED" in res.answer.upper()
+
+
+
 

@@ -36,7 +36,12 @@ htmlcov/
 .superpowers/sdd/*/briefs/
 .superpowers/sdd/*/reviews/
 
+# Downloads & Parquet Cache
+data/downloads/
+*.parquet
+
 # Operating System
+
 .DS_Store
 Thumbs.db
 

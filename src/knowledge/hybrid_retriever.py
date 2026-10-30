@@ -73,7 +73,9 @@ class HybridRetriever:
                 ("stemi", 12.0), ("dapt", 10.0), ("antiplatelet", 8.0),
                 ("penicillin allergy", 12.0), ("pneumonia", 10.0), ("cap", 10.0), ("consolidation", 8.0),
                 ("nitroglycerin", 12.0), ("right ventricular", 12.0),
-                ("oxygen", 10.0), ("normoxic", 12.0)
+                ("oxygen", 10.0), ("normoxic", 12.0),
+                ("stroke", 12.0), ("ischemic", 10.0), ("thrombolysis", 10.0), ("alteplase", 10.0), ("thrombectomy", 10.0),
+                ("hydrocephalus", 12.0), ("ventriculomegaly", 12.0), ("ventricle", 8.0)
             ]
             for phrase, weight in key_phrases:
                 if phrase in q_lower and (phrase in topic or phrase in category or phrase in content):

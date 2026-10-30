@@ -58,6 +58,13 @@ class VerifierAgent:
             query_diseases.append("right ventricular")
         if any(k in q_lower for k in ["oxygen", "spo2", "normoxic"]):
             query_diseases.append("oxygen")
+        if any(k in q_lower for k in ["stroke", "ischemic", "thrombolysis", "thrombectomy", "alteplase"]):
+            query_diseases.append("stroke")
+        if any(k in q_lower for k in ["hydrocephalus", "ventriculomegaly", "ventricle"]):
+            query_diseases.append("hydrocephalus")
+        if any(k in q_lower for k in ["hemorrhage", "hematoma", "bleed"]):
+            query_diseases.append("hemorrhage")
+
 
         if not query_diseases:
             return 1.0
@@ -382,12 +389,29 @@ class VerifierAgent:
                 out.clinical_context = "Acute RV Infarction on 12-Lead ECG"
                 out.detected_contradictions.append(out.safety_reason)
 
-            # C. Check general contraindicated interventions specified in scan analysis
+            # C. Intracranial Hemorrhage on Head CT -> Contraindicates Thrombolytics & Anticoagulants
+            elif "hemorrhage" in imp_lower or "bleed" in imp_lower or "hematoma" in imp_lower or "ich" in imp_lower:
+                out.safety_signal = True
+                out.contradiction_type = "CLINICAL_CONTRAINDICATION"
+                out.safety_severity = "HIGH"
+                out.r_contra = 0.85
+                out.safety_reason = (
+                    "CRITICAL RADIOLOGICAL CONTRAINDICATION: Acute Intracranial Hemorrhage detected on Head CT Scan. "
+                    "Intravenous Thrombolytics (Alteplase / Tenecteplase / tPA), therapeutic anticoagulants (Heparin / DOACs), "
+                    "and antiplatelet agents are STRICTLY CONTRAINDICATED due to imminent risk of fatal hematoma expansion. "
+                    "Mandatory immediate neurosurgical consultation and strict blood pressure reduction."
+                )
+                out.intervention = "Thrombolytics / Anticoagulation (tPA / Heparin)"
+                out.clinical_context = "Acute Intracranial Hemorrhage on Head CT"
+                out.detected_contradictions.append(out.safety_reason)
+
+            # D. Check general contraindicated interventions specified in scan analysis
             elif imaging.contraindicated_interventions and out.r_contra < 0.70:
                 out.safety_signal = True
                 out.safety_severity = "MEDIUM"
                 out.r_contra = max(out.r_contra, 0.75)
                 for ci in imaging.contraindicated_interventions:
                     out.detected_contradictions.append(f"SCAN SAFETY ALERT: {ci}")
+
 
         return out

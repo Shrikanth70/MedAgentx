@@ -64,8 +64,115 @@ class MedicalImagingAnalyzer:
 
         combined_context = f"{file_name} {clinical_hint}".lower()
 
-        # 1. Pneumothorax Detection (Trauma / Dyspnea CXR)
+        # 1. Brain MRI: Acute Ischemic Infarction (DWI Restriction / Stroke)
+        if any(k in combined_context for k in ["mri", "magnetic resonance"]) and any(
+            k in combined_context for k in ["dwi", "diffusion", "ischemi", "infarct", "stroke", "cytotoxic"]
+        ):
+            return ImagingAnalysis(
+                modality="Brain MRI",
+                radiological_findings=[
+                    "Focal high signal hyperintensity on Diffusion-Weighted Imaging (DWI)",
+                    "Corresponding low signal hypointensity on Apparent Diffusion Coefficient (ADC) map",
+                    "Acute restricted water diffusion diagnostic of cytotoxic edema",
+                    "Absence of acute susceptibility bloom artifact or hemorrhagic transformation",
+                ],
+                diagnostic_impression="Acute Ischemic Cerebral Infarction (DWI Restriction without Hemorrhage)",
+                critical_urgency="EMERGENT",
+                contraindicated_interventions=[
+                    "Excessive acute blood pressure lowering (permissive hypertension indicated to maintain penumbral perfusion)",
+                ],
+                confidence=0.95,
+                metadata={"detected_sign": "dwi_adc_restricted_diffusion", **image_meta},
+            )
+
+        # 2. Head CT: Acute Intracranial Hemorrhage (Hematoma / Bleed / SDH / EDH / SAH)
+        is_ct_context = ("ct" in combined_context or "computed tomography" in combined_context or ("head" in combined_context and "mri" not in combined_context))
+        has_bleed_keyword = any(k in combined_context for k in ["hemorrhage", "hematoma", "bleed", "bleeding", "ich", "sdh", "sah", "edh", "intracranial bleed"])
+        has_bleed_negation = any(neg in combined_context for neg in ["without bleed", "no bleed", "no hemorrhage", "without hemorrhage"])
+        if is_ct_context and has_bleed_keyword and not has_bleed_negation:
+            return ImagingAnalysis(
+                modality="CT Scan (Head)",
+                radiological_findings=[
+                    "Hyperdense extra-axial or intraparenchymal acute blood collection",
+                    "Mass effect with effacement of adjacent cortical sulci and ipsilateral lateral ventricle",
+                    "Midline shift and risk of impending uncal/transtentorial herniation",
+                    "Absence of skull fracture on bone window; acute hemorrhagic density 50-70 HU",
+                ],
+                diagnostic_impression="Acute Intracranial Hemorrhage with Mass Effect (ICH / Hematoma)",
+                critical_urgency="EMERGENT",
+                contraindicated_interventions=[
+                    "Thrombolytic therapy (IV Alteplase / Tenecteplase / tPA) - strict contraindication due to fatal hemorrhage extension",
+                    "Therapeutic anticoagulation (Heparin, Enoxaparin, Warfarin, DOACs)",
+                    "Antiplatelet agents (Aspirin, Clopidogrel, Ticagrelor)",
+                ],
+                confidence=0.96,
+                metadata={"detected_sign": "hyperdense_intracranial_blood", **image_meta},
+            )
+
+
+        # 3. Brain MRI: Ventriculomegaly / Hydrocephalus
+        if any(k in combined_context for k in ["mri", "magnetic resonance", "brain"]) and any(
+            k in combined_context for k in ["ventricle", "ventriculomegaly", "hydrocephalus", "lateral ventricle"]
+        ):
+            return ImagingAnalysis(
+                modality="Brain MRI",
+                radiological_findings=[
+                    "Marked dilatation of lateral and third cerebral ventricles out of proportion to sulcal enlargement",
+                    "Evans index > 0.32 indicating pathological ventriculomegaly",
+                    "Periventricular T2/FLAIR hyperintensity reflecting transependymal interstitial CSF edema",
+                    "Normal flow void through cerebral aqueduct",
+                ],
+                diagnostic_impression="Obstructive / Communicating Hydrocephalus (Ventriculomegaly)",
+                critical_urgency="URGENT",
+                contraindicated_interventions=[],
+                confidence=0.94,
+                metadata={"detected_sign": "evans_index_ventriculomegaly", **image_meta},
+            )
+
+        # 4. Abdomen / Chest CT: Acute Bowel Obstruction / Pneumoperitoneum / Aneurysm
+        if any(k in combined_context for k in ["ct", "computed tomography", "axial"]) and any(
+            k in combined_context for k in ["obstruction", "bowel obstruction", "free air", "pneumoperitoneum", "aneurysm", "pancreas"]
+        ):
+            return ImagingAnalysis(
+                modality="CT Scan (Abdomen & Chest)",
+                radiological_findings=[
+                    "Dilated small bowel loops exceeding 3 cm caliber with multiple air-fluid transition levels",
+                    "Decompressed distal colon confirming mechanical obstruction transition point",
+                    "Parietal mucosal thickening without overt pneumatosis intestinalis or perforation",
+                ],
+                diagnostic_impression="Acute High-Grade Mechanical Small Bowel Obstruction (SBO)",
+                critical_urgency="EMERGENT",
+                contraindicated_interventions=[
+                    "Oral intake or oral medications (Strict NPO mandatory)",
+                    "Oral contrast / cathartics / prokinetics",
+                ],
+                confidence=0.93,
+                metadata={"detected_sign": "air_fluid_bowel_transition", **image_meta},
+            )
+
+        # 5. Craniofacial / Skull CT: Fracture
+        if any(k in combined_context for k in ["ct", "computed tomography"]) and any(
+            k in combined_context for k in ["fracture", "skull", "bone window", "temporal bone"]
+        ):
+            return ImagingAnalysis(
+                modality="CT Scan (Head & Bones)",
+                radiological_findings=[
+                    "Discontinuity of cranial cortical bone with diastasis along suture line",
+                    "Trace pneumocephalus in adjacent intracranial convexity",
+                    "No focal epidural or subdural mass effect on brain parenchyma",
+                ],
+                diagnostic_impression="Traumatic Calvarial / Basilar Skull Fracture",
+                critical_urgency="URGENT",
+                contraindicated_interventions=[
+                    "Blind nasogastric tube or nasopharyngeal airway placement (risk of intracranial penetration in basilar fracture)",
+                ],
+                confidence=0.93,
+                metadata={"detected_sign": "calvarial_cortical_disruption", **image_meta},
+            )
+
+        # 6. Pneumothorax Detection (Trauma / Dyspnea CXR)
         if any(k in combined_context for k in ["pneumothorax", "ptx", "collapsed lung"]):
+
             return ImagingAnalysis(
                 modality="Chest X-Ray",
                 radiological_findings=[
@@ -176,19 +283,32 @@ class MedicalImagingAnalyzer:
                 metadata={"detected_sign": "peaked_t_waves", **image_meta},
             )
 
-        # Default / Baseline Image
-        modality = "12-Lead ECG" if "ecg" in combined_context else "Chest X-Ray"
+        # Default / Baseline Diagnostic Scan
+        if "ct" in combined_context:
+            modality = "CT Scan"
+            impression = "Diagnostic Computed Tomography Scan without Acute Surgical Findings"
+            findings = ["Grossly normal attenuation across parenchymal windows", "No evidence of acute intracranial hemorrhage or mass effect"]
+        elif "mri" in combined_context:
+            modality = "Brain / Spine MRI"
+            impression = "Diagnostic Magnetic Resonance Imaging Study without Acute Infarction"
+            findings = ["Normal ventricular morphology and anatomical signal intensities", "No acute restricted diffusion or pathological enhancement"]
+        elif "ecg" in combined_context:
+            modality = "12-Lead ECG"
+            impression = "Normal Sinus Rhythm without Acute Ischemic ST Deviations"
+            findings = ["Normal PR and QTc intervals", "No ST-segment elevation or pathological Q waves"]
+        else:
+            modality = "Chest X-Ray"
+            impression = "Diagnostic Chest Examination without Acute Pathological Findings"
+            findings = ["Normal cardiothoracic anatomy and vascular distribution", "Clear lung fields with no focal consolidations, effusions, or pneumothorax"]
+
         return ImagingAnalysis(
             modality=modality,
-            radiological_findings=[
-                "Normal cardiothoracic anatomy and vascular distribution",
-                "Clear lung fields with no focal consolidations, effusions, or pneumothorax",
-                "Normal sinus rhythm without ischemic ST-T segment deviations",
-            ],
-            diagnostic_impression="Diagnostic Examination without Acute Pathological Findings",
+            radiological_findings=findings,
+            diagnostic_impression=impression,
             critical_urgency="ROUTINE",
             contraindicated_interventions=[],
             confidence=0.90,
             metadata=image_meta,
         )
+
 

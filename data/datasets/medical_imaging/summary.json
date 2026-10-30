@@ -1,0 +1,15 @@
+{
+  "total_studies": 122,
+  "modalities": {
+    "Chest X-Ray (CXR)": 45,
+    "CT Scan (Head / Chest / Abdomen)": 65,
+    "Brain / Spine MRI": 11,
+    "12-Lead ECG": 1
+  },
+  "subfolders": {
+    "xray": 45,
+    "ct": 65,
+    "mri": 11,
+    "ecg": 1
+  }
+}

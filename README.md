@@ -2,7 +2,7 @@
 
 ### Adaptive Confidence-Guided Multi-Agent Retrieval-Augmented Framework for Evidence-Based Clinical Decision Support
 
-[![Tests](https://img.shields.io/badge/pytest-36%2F36%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/pytest-38%2F38%20passing-brightgreen.svg)](tests/)
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![Multimodal](https://img.shields.io/badge/perception-Multimodal%20CXR%20%2F%20ECG-blueviolet.svg)](#multimodal-perception--medical-imaging-engine)
 [![Paper](https://img.shields.io/badge/IEEE%20Transactions-Manuscript%20Ready-purple.svg)](paper/)
@@ -117,21 +117,28 @@ Demonstrates 4 multimodal studies:
 - **Critical Care Lab Document**: Severe septic shock with acute kidney injury and metformin contraindication alert.
 - **Trauma CXR Safety Override**: Tension pneumothorax blocking positive-pressure ventilation (BiPAP/CPAP) and mandating immediate needle decompression / chest tube placement.
 
-### 4. Real-World Patient Consultation Suite
+### 4. Multimodal Dataset Benchmark (X-Rays, CTs, MRIs, ECGs)
+Run comprehensive cross-modal evaluation across 122 curated clinical cases from the VQA-RAD radiology archive (`data/datasets/medical_imaging/`):
+```bash
+python scripts/test_multimodal_dataset.py
+```
+Validates Head CT (intracranial hemorrhage with tPA contraindication), Brain MRI (acute ischemic stroke and hydrocephalus), Chest X-Ray (pneumonia and pneumothorax), and 12-lead ECGs.
+
+### 5. Real-World Patient Consultation Suite
 Run realistic emergency, critical care, and multi-morbidity patient vignettes with automated vitals extraction and safety constraints:
 ```bash
 python scripts/demo_patient_cases.py
 ```
 Demonstrates 4 complex clinical scenarios (Septic shock with AKI, Decompensated heart failure with severe hyperkalemia, Severe CAP with penicillin anaphylaxis, and Acute COPD exacerbation with hypercapnic risk).
 
-### 5. One-Click Benchmark Reproduction
+### 6. One-Click Benchmark Reproduction
 Reproduce all empirical tables and ablation experiments in one command:
 ```bash
 python scripts/reproduce_all.py
 ```
 Output results are exported to `research/evaluation_results/benchmark_results.csv`.
 
-### 6. Launch Clinician Dashboard
+### 7. Launch Clinician Dashboard
 ```bash
 # Option A: Interactive Streamlit UI with Multimodal Scan & Report Intake
 streamlit run app.py
