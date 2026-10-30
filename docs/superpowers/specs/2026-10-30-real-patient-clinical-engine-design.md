@@ -186,3 +186,4 @@ This specification establishes:
    - All existing 29 pytest tests continue to pass without regression.
 3. **End-to-End Live Execution**:
    - `python scripts/demo_patient_cases.py` runs all 4 realistic clinical cases successfully.
+

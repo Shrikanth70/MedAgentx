@@ -2,7 +2,7 @@
 
 ### Adaptive Confidence-Guided Multi-Agent Retrieval-Augmented Framework for Evidence-Based Clinical Decision Support
 
-[![Tests](https://img.shields.io/badge/pytest-29%2F29%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/pytest-33%2F33%20passing-brightgreen.svg)](tests/)
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![Paper](https://img.shields.io/badge/IEEE%20Transactions-Manuscript%20Ready-purple.svg)](paper/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -105,7 +105,14 @@ pytest -v
 ```
 Expected output: **29 passed in ~11s**.
 
-### 3. One-Click Benchmark Reproduction
+### 3. Real-World Patient Consultation Suite
+Run realistic emergency, critical care, and multi-morbidity patient vignettes with automated vitals extraction and safety constraints:
+```bash
+python scripts/demo_patient_cases.py
+```
+Demonstrates 4 complex clinical scenarios (Septic shock with AKI, Decompensated heart failure with severe hyperkalemia, Severe CAP with penicillin anaphylaxis, and Acute COPD exacerbation with hypercapnic risk).
+
+### 4. One-Click Benchmark Reproduction
 Reproduce all empirical tables and ablation experiments in one command:
 ```bash
 python scripts/reproduce_all.py

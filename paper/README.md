@@ -22,3 +22,4 @@ pdflatex main.tex
 1. Create a **New Project** -> **Upload Project (ZIP)**.
 2. Zip the `paper/` directory containing `main.tex` and `references.bib`.
 3. Upload and click **Recompile**.
+
