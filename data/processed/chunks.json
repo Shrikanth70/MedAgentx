@@ -47,5 +47,47 @@
     "clinical_topic": "Supplemental Oxygen Therapy in Normoxic STEMI",
     "disease_category": "Acute Coronary Syndrome (STEMI)",
     "content": "Routine supplemental oxygen therapy is NOT recommended in patients with acute STEMI who are normoxic (SpO2 >= 90%). Hyperoxia causes coronary vasoconstriction, increases systemic vascular resistance, and expands myocardial infarct size. Oxygen is indicated ONLY if SpO2 < 90% or patient is in respiratory distress."
+  },
+  {
+    "chunk_id": "chunk_sepsis_001",
+    "source": "Surviving Sepsis Campaign: International Guidelines for Management of Sepsis and Septic Shock 2021",
+    "clinical_topic": "Septic Shock Resuscitation & 1-Hour Bundle",
+    "disease_category": "Critical Care (Sepsis & Septic Shock)",
+    "content": "For patients with sepsis or septic shock, immediate resuscitation must occur within the first hour: 1) Measure blood lactate level; remeasure if initial lactate > 2.0 mmol/L. 2) Obtain blood cultures prior to starting antimicrobials. 3) Administer broad-spectrum IV antimicrobials within 1 hour. 4) For sepsis-induced hypoperfusion (lactate >= 4.0 mmol/L or SBP < 90 mmHg / MAP < 65 mmHg), administer at least 30 mL/kg of IV balanced crystalloid within 3 hours. 5) Apply vasopressors (Norepinephrine is the first-choice vasopressor) during or after fluid resuscitation to target a Mean Arterial Pressure (MAP) >= 65 mmHg."
+  },
+  {
+    "chunk_id": "chunk_aki_001",
+    "source": "KDIGO Clinical Practice Guideline for Acute Kidney Injury",
+    "clinical_topic": "Acute Kidney Injury & Nephrotoxic Medication Withholding",
+    "disease_category": "Nephrology (Acute Kidney Injury)",
+    "content": "In acute kidney injury (AKI) defined by sudden increase in serum creatinine or reduction in eGFR < 30 mL/min, clinicians must immediately: 1) Discontinue and withhold all potentially nephrotoxic medications, including NSAIDs, aminoglycosides, and iodinated radiocontrast agents. 2) Hold Metformin to prevent potentially fatal lactic acidosis. 3) Discontinue or withhold ACE inhibitors, ARBs, and SGLT2 inhibitors during acute hypoperfusion/hypovolemic AKI. 4) Assess volume status and optimize renal perfusion. 5) Monitor serum potassium closely for life-threatening hyperkalemia."
+  },
+  {
+    "chunk_id": "chunk_hyperkalemia_001",
+    "source": "Emergency Management of Severe Hyperkalemia Practice Guidelines",
+    "clinical_topic": "Severe Hyperkalemia Acute Management Protocol",
+    "disease_category": "Nephrology & Electrolytes (Hyperkalemia)",
+    "content": "Severe hyperkalemia (serum potassium K+ > 5.2 mEq/L, and particularly K+ >= 6.0 mEq/L or any ECG changes including peaked T waves or widened QRS) is a medical emergency: 1) Immediate Cardiac Membrane Stabilization: IV Calcium Gluconate (10 mL of 10% solution over 2-3 minutes). 2) Intracellular Potassium Shifting: Regular Insulin 10 units IV accompanied by 25-50 g IV Dextrose (50% Dextrose / D50W), plus nebulized Albuterol (10-20 mg). 3) Total Body Potassium Elimination: IV loop diuretics (Furosemide) if volume adequate, oral potassium binders (Sodium zirconium cyclosilicate / Lokelma or Patiromer), or emergent hemodialysis. 4) Strict Contraindication: Discontinue and hold all potassium-sparing medications: Spironolactone, Eplerenone, ACE inhibitors, ARBs, ARNI (Sacubitril/valsartan), and potassium supplements."
+  },
+  {
+    "chunk_id": "chunk_copd_001",
+    "source": "GOLD 2024 Global Strategy for the Diagnosis, Management, and Prevention of COPD",
+    "clinical_topic": "Acute COPD Exacerbation Management & Controlled Oxygen",
+    "disease_category": "Pulmonology (COPD & Asthma)",
+    "content": "Management of acute exacerbation of Chronic Obstructive Pulmonary Disease (COPD): 1) Controlled Oxygen Therapy: Titrate oxygen via Venturi mask or nasal cannula to target SpO2 of 88% to 92% to prevent hypercapnic respiratory failure and CO2 retention. 2) Inhaled Bronchodilators: Short-acting beta2-agonist (Albuterol) plus short-acting anticholinergic (Ipratropium bromide) via nebulizer or spacer every 1-4 hours as needed. 3) Systemic Corticosteroids: Oral Prednisone 40 mg daily for 5 days improves FEV1, oxygenation, and recovery time. 4) Empiric Antibiotics: Indicated when increased sputum purulence is present (Amoxicillin/clavulanate, Azithromycin, or Doxycycline for 5 days)."
+  },
+  {
+    "chunk_id": "chunk_dka_001",
+    "source": "American Diabetes Association (ADA) Standards of Medical Care in Hospitalized DKA",
+    "clinical_topic": "Diabetic Ketoacidosis (DKA) Resuscitation & Insulin Protocol",
+    "disease_category": "Endocrinology (Diabetic Ketoacidosis)",
+    "content": "Management of Diabetic Ketoacidosis (DKA): 1) Fluid Resuscitation: Initial IV fluid expansion with 0.9% Normal Saline at 1000-1500 mL/hr during the first hour. 2) Potassium Evaluation BEFORE Insulin: If serum K+ < 3.3 mEq/L, HOLD insulin and replete potassium until K+ >= 3.3 mEq/L to prevent fatal cardiac arrhythmias. If K+ 3.3-5.2 mEq/L, add 20-30 mEq K+ per liter of IV fluid. 3) Continuous IV Regular Insulin: Administer 0.1 units/kg/hr infusion. 4) Target Glucose: When blood glucose reaches 200 mg/dL, add 5% dextrose to fluids while continuing insulin until the anion gap closes."
+  },
+  {
+    "chunk_id": "chunk_cap_inpatient_001",
+    "source": "2019 ATS/IDSA Guidelines for Community-Acquired Pneumonia - Inpatient Management",
+    "clinical_topic": "Inpatient Severe CAP & Penicillin Allergy Protocols",
+    "disease_category": "Infectious Disease (Pneumonia)",
+    "content": "For hospitalized patients with severe Community-Acquired Pneumonia (CAP) without risk factors for MRSA or Pseudomonas: Standard therapy is IV Beta-lactam (Ceftriaxone 1-2g daily or Ampicillin/sulbactam) PLUS a Macrolide (IV Azithromycin 500mg daily). PENICILLIN ALLERGY PROTOCOL: In patients with a documented severe/anaphylactic penicillin or beta-lactam allergy, beta-lactams must be avoided. The recommended alternative regimen is monotherapy with an IV respiratory fluoroquinolone: Levofloxacin 750 mg daily or Moxifloxacin 400 mg daily, OR Aztreonam plus Levofloxacin."
   }
 ]

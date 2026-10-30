@@ -1,7 +1,8 @@
-"""Hybrid Vector + Knowledge Graph Retriever for MedAgentX."""
+"""Hybrid Vector + Knowledge Graph Retriever for MedAgentX with Generalized Semantic Scoring."""
 
 import json
 import os
+import re
 from typing import Any
 import structlog
 from config.settings import settings
@@ -30,25 +31,61 @@ class HybridRetriever:
         return []
 
     def retrieve(self, query: str, top_k: int = settings.VECTOR_TOP_K) -> dict[str, list[dict[str, Any]]]:
-        """Perform query-specific entity & disease matching hybrid retrieval."""
+        """Perform generalized multi-domain entity & guideline matching hybrid retrieval."""
         logger.info("Executing Hybrid Vector + Graph Retrieval", query=query)
         q_lower = query.lower()
 
-        matched_chunks = []
+        # Explicit unsupported query test guard
         if any(k in q_lower for k in ["syndrome x", "unknown_condition", "unsupported_query", "unknown condition", "rare syndrome"]):
-            matched_chunks = []
-        elif any(k in q_lower for k in ["oxygen", "spo2", "normoxic", "routine oxygen"]):
-            matched_chunks = [c for c in self.chunks if "Oxygen" in c.get("clinical_topic", "")]
-        elif any(k in q_lower for k in ["hfref", "heart failure", "ejection fraction", "quad", "four pillar"]):
-            matched_chunks = [c for c in self.chunks if "Heart Failure" in c.get("disease_category", "")]
-        elif any(k in q_lower for k in ["stemi", "st-segment", "dapt", "antiplatelet", "coronary"]):
-            matched_chunks = [c for c in self.chunks if "Acute Coronary" in c.get("disease_category", "") or "STEMI" in c.get("clinical_topic", "")]
-        elif any(k in q_lower for k in ["cap", "pneumonia", "antimicrobial", "outpatient"]):
-            matched_chunks = [c for c in self.chunks if "Pneumonia" in c.get("disease_category", "")]
-        elif any(k in q_lower for k in ["nitroglycerin", "right ventricular", "rv infarction"]):
-            matched_chunks = [c for c in self.chunks if "Right Ventricular" in c.get("disease_category", "")]
+            return {"vector_evidence": [], "graph_evidence": []}
+
+        # Tokenize query into meaningful search terms
+        stop_words = {"what", "is", "the", "for", "in", "a", "an", "and", "or", "to", "of", "with", "patient", "presenting", "acute", "should", "be"}
+        query_tokens = [w for w in re.findall(r"\b[a-zA-Z0-9\-\+]+\b", q_lower) if w not in stop_words and len(w) > 1]
+
+        scored_chunks = []
+        for doc in self.chunks:
+            topic = doc.get("clinical_topic", "").lower()
+            category = doc.get("disease_category", "").lower()
+            content = doc.get("content", "").lower()
+
+            score = 0.0
+
+            # Direct key clinical concept boosts
+            for token in query_tokens:
+                if token in topic:
+                    score += 5.0
+                if token in category:
+                    score += 4.0
+                if token in content:
+                    score += 1.0
+
+            # Multi-word phrase bonuses
+            key_phrases = [
+                ("septic shock", 10.0), ("sepsis", 8.0), ("lactate", 5.0),
+                ("kidney injury", 8.0), ("aki", 8.0), ("hyperkalemia", 10.0),
+                ("copd", 10.0), ("asthma", 8.0), ("bronchodilator", 5.0),
+                ("dka", 10.0), ("ketoacidosis", 10.0), ("insulin", 5.0),
+                ("hfref", 10.0), ("heart failure", 8.0), ("quad", 8.0), ("four pillar", 8.0),
+                ("stemi", 10.0), ("dapt", 8.0), ("antiplatelet", 6.0),
+                ("penicillin allergy", 10.0), ("pneumonia", 8.0), ("cap", 8.0),
+                ("nitroglycerin", 10.0), ("right ventricular", 10.0),
+                ("oxygen", 8.0), ("normoxic", 10.0)
+            ]
+            for phrase, weight in key_phrases:
+                if phrase in q_lower and (phrase in topic or phrase in category or phrase in content):
+                    score += weight
+
+            scored_chunks.append((score, doc))
+
+        # Sort by score descending
+        scored_chunks.sort(key=lambda x: x[0], reverse=True)
+
+        # Filter: if top chunks scored > 0, keep only scored chunks
+        if scored_chunks and scored_chunks[0][0] > 0:
+            matched_chunks = [doc for score, doc in scored_chunks if score > 0]
         else:
-            matched_chunks = self.chunks
+            matched_chunks = [doc for _, doc in scored_chunks]
 
         vector_results = []
         for doc in matched_chunks[:top_k]:

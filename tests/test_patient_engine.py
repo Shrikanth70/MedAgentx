@@ -30,3 +30,19 @@ def test_patient_vignette_parser():
     assert patient.is_hyperkalemic is True
     assert any("penicillin" in a.lower() for a in patient.allergies)
     assert any("hfref" in h.lower() for h in patient.past_medical_history)
+
+
+def test_generalized_retrieval_multi_domain():
+    """Verify hybrid retriever dynamically surfaces Sepsis, AKI, and COPD guidelines."""
+    from src.knowledge.hybrid_retriever import HybridRetriever
+    retriever = HybridRetriever()
+
+    # Sepsis retrieval
+    res_sepsis = retriever.retrieve("Patient in septic shock with refractory hypotension and elevated serum lactate")
+    topics_sepsis = [c.get("clinical_topic", "") for c in res_sepsis["vector_evidence"]]
+    assert any("Sepsis" in t or "Septic" in t or "Resuscitation" in t for t in topics_sepsis)
+
+    # AKI / Hyperkalemia retrieval
+    res_renal = retriever.retrieve("Severe acute kidney injury with hyperkalemia K 6.2 and oliguria")
+    topics_renal = [c.get("clinical_topic", "") for c in res_renal["vector_evidence"]]
+    assert any("Hyperkalemia" in t or "Kidney" in t or "Renal" in t for t in topics_renal)
