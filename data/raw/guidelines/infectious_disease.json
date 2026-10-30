@@ -1,0 +1,18 @@
+[
+  {
+    "doc_id": "GUIDE-INF-001",
+    "title": "IDSA/ATS Consensus Guidelines on the Management of Community-Acquired Pneumonia in Adults",
+    "source": "IDSA Guidelines",
+    "publication_date": "2023-09-10",
+    "url": "https://www.idsociety.org/practice-guidelines/community-acquired-pneumonia/",
+    "content": "Outpatient empiric antimicrobial therapy for adult community-acquired pneumonia (CAP) without comorbidities or MRSA/Pseudomonas risk factors consists of amoxicillin (1 g three times daily) or doxycycline (100 mg twice daily). Macrolides (azithromycin 500 mg day 1, then 250 mg daily) are recommended only in areas with pneumococcal macrolide resistance < 25%. For outpatients with comorbidities (chronic heart, lung, liver, or renal disease, diabetes, alcoholism, or malignancy), combination therapy with a beta-lactam (amoxicillin/clavulanate 875/125 mg twice daily or cefpodoxime 200 mg twice daily) PLUS a macrolide or doxycycline, OR monotherapy with a respiratory fluoroquinolone (levofloxacin 750 mg daily or moxifloxacin 400 mg daily) is recommended. Inpatient non-severe CAP requires a beta-lactam (ceftriaxone 1-2 g daily) plus a macrolide (azithromycin 500 mg daily) or a respiratory fluoroquinolone."
+  },
+  {
+    "doc_id": "PUBMED-001",
+    "title": "Efficacy of SGLT2 Inhibitors in Diabetic Kidney Disease: A Systematic Review and Meta-Analysis",
+    "source": "PubMed Central (PMC)",
+    "publication_date": "2024-02-28",
+    "url": "https://pubmed.ncbi.nlm.nih.gov/38421090/",
+    "content": "Sodium-glucose cotransporter-2 (SGLT2) inhibitors significantly reduce renal disease progression, cardiovascular mortality, and heart failure hospitalizations in patients with type 2 diabetes and chronic kidney disease (CKD). Analysis of 12 randomized clinical trials (n = 48,210) demonstrated a 37% relative risk reduction in the composite renal outcome (sustained eGFR decline, end-stage kidney disease, or renal death; HR 0.63, 95% CI 0.56-0.72). The initial transient decline in eGFR ('eGFR dip' up to 30%) observed within 4 weeks of starting SGLT2 inhibitor therapy is hemodynamically driven by reduction in intraglomerular pressure and should not trigger premature drug cessation unless associated with acute clinical volume depletion."
+  }
+]

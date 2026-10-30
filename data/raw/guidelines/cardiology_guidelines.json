@@ -1,0 +1,18 @@
+[
+  {
+    "doc_id": "GUIDE-CARD-001",
+    "title": "2024 AHA/ACC Clinical Practice Guideline for the Management of Acute Coronary Syndromes",
+    "source": "AHA/ACC Guidelines",
+    "publication_date": "2024-01-15",
+    "url": "https://www.ahajournals.org/doi/10.1161/CIR.0000000000001200",
+    "content": "Acute Coronary Syndrome (ACS) encompasses ST-elevation myocardial infarction (STEMI), non-ST-elevation myocardial infarction (NSTEMI), and unstable angina. Immediate initial pharmacological therapy includes dual antiplatelet therapy (DAPT) with high-dose aspirin (162-325 mg initial loading dose) and a P2Y12 inhibitor (ticagrelor 180 mg or prasugrel 60 mg). Sublingual nitroglycerin (0.4 mg) should be administered every 5 minutes for up to 3 doses for ongoing ischemic chest pain, provided there is no right ventricular infarction or recent phosphodiesterase-5 inhibitor use. High-intensity statin therapy (atorvastatin 80 mg or rosuvastatin 40 mg) must be initiated early regardless of baseline LDL cholesterol level. Invasive coronary angiography within 24 hours is strongly recommended for high-risk NSTEMI patients displaying elevated cardiac troponin, recurrent angina, or dynamic ST-segment changes."
+  },
+  {
+    "doc_id": "GUIDE-CARD-002",
+    "title": "NICE Guideline NG106: Chronic Heart Failure in Adults: Diagnosis and Management",
+    "source": "NICE Guidelines",
+    "publication_date": "2023-11-20",
+    "url": "https://www.nice.org.uk/guidance/ng106",
+    "content": "For patients with heart failure with reduced ejection fraction (HFrEF, LVEF <= 40%), foundational quad-therapy should be introduced promptly: (1) an ACE inhibitor or Angiotensin Receptor-Neprilysin Inhibitor (ARNI such as sacubitril/valsartan), (2) an evidence-based beta-blocker (bisoprolol, carvedilol, or nebivolol), (3) a mineralocorticoid receptor antagonist (spironolactone or eplerenone), and (4) a sodium-glucose cotransporter-2 (SGLT2) inhibitor (dapagliflozin or empagliflozin). Serum potassium and renal function (eGFR) must be monitored 1 to 2 weeks after initiation or dose escalation of ACE inhibitors, ARNIs, or MRAs. Loop diuretics (e.g., furosemide 20-40 mg daily) are indicated for symptomatic relief of congestion and fluid overload."
+  }
+]

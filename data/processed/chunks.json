@@ -1,0 +1,51 @@
+[
+  {
+    "chunk_id": "chunk_hfref_001",
+    "source": "2022 AHA/ACC/HFSA Guideline for the Management of Heart Failure",
+    "clinical_topic": "HFrEF GDMT Quad-Therapy",
+    "disease_category": "Heart Failure (HFrEF)",
+    "content": "In patients with HFrEF (LVEF <= 40%), Guideline-Directed Medical Therapy (GDMT) rests on four foundational medication classes ('Four Pillars'): 1) ARNI (Sacubitril/valsartan preferred; ACEi or ARB if ARNI not feasible), 2) Evidence-based Beta-blocker (Carvedilol, Bisoprolol, or Metoprolol succinate extended-release), 3) Mineralocorticoid Receptor Antagonist (MRA: Spironolactone or Eplerenone), and 4) SGLT2 Inhibitor (Dapagliflozin or Empagliflozin, regardless of diabetes status). These four medication classes should be initiated early and titrated to target doses to reduce cardiovascular mortality and heart failure hospitalizations."
+  },
+  {
+    "chunk_id": "chunk_stemi_001",
+    "source": "2023 ACC/AHA STEMI & ACS Management Guidelines",
+    "clinical_topic": "STEMI DAPT & Acute Care",
+    "disease_category": "Acute Coronary Syndrome (STEMI)",
+    "content": "For patients presenting with acute ST-segment elevation myocardial infarction (STEMI), immediate pharmacological management includes Dual Antiplatelet Therapy (DAPT) with high-dose Aspirin (162-325 mg loading dose) plus a P2Y12 inhibitor loading dose. High-intensity statin therapy (Atorvastatin 80 mg or Rosuvastatin 40 mg) should be initiated immediately. Primary percutaneous coronary intervention (PCI) is indicated within 90 minutes of first medical contact."
+  },
+  {
+    "chunk_id": "chunk_stemi_002",
+    "source": "2023 ACC/AHA STEMI Guidelines - Reperfusion & P2Y12 Selection",
+    "clinical_topic": "P2Y12 Inhibitor Selection by Reperfusion Pathway",
+    "disease_category": "Acute Coronary Syndrome (STEMI)",
+    "content": "P2Y12 inhibitor loading dose selection in STEMI depends strictly on the reperfusion strategy: For Primary PCI, potent P2Y12 inhibitors (Ticagrelor 180 mg loading dose or Prasugrel 60 mg loading dose) are strongly preferred over Clopidogrel due to superior efficacy in reducing ischemic events and stent thrombosis. Prasugrel is contraindicated in patients with a history of stroke/TIA. If fibrinolytic therapy is administered (non-PCI center), Clopidogrel (300 mg loading dose for age <= 75; 75 mg for age > 75) is the P2Y12 inhibitor of choice, as Ticagrelor and Prasugrel have not been evaluated with full-dose fibrinolytics."
+  },
+  {
+    "chunk_id": "chunk_cap_001",
+    "source": "2019 ATS/IDSA Community-Acquired Pneumonia Guidelines",
+    "clinical_topic": "Outpatient CAP Empiric Antimicrobial Regimen",
+    "disease_category": "Community-Acquired Pneumonia (CAP)",
+    "content": "For outpatient adults with community-acquired pneumonia (CAP) who have comorbidities (such as diabetes mellitus, chronic heart/lung disease, renal disease), empiric combination therapy is recommended: a Beta-lactam (Amoxicillin/clavulanate 875/125 mg twice daily, Cefpodoxime 200 mg twice daily, or Cefuroxime 500 mg twice daily) PLUS a Macrolide (Azithromycin or Clarithromycin) OR Doxycycline 100 mg twice daily. Monotherapy with a respiratory fluoroquinolone (Levofloxacin 750 mg daily or Moxifloxacin 400 mg daily) is an alternative."
+  },
+  {
+    "chunk_id": "chunk_rv_nitro_001",
+    "source": "AHA/ACC Emergency Cardiovascular Care Guidelines",
+    "clinical_topic": "Right Ventricular Infarction & Nitroglycerin Contraindication",
+    "disease_category": "Right Ventricular Myocardial Infarction",
+    "content": "Sublingual or intravenous Nitroglycerin and other nitrates are strictly CONTRAINDICATED in patients with acute right ventricular (RV) myocardial infarction or inferior MI with suspected RV involvement. Nitrates reduce preload, which can cause severe, life-threatening hypotension and hemodynamic collapse in RV infarction. Volume expansion with intravenous normal saline is the primary initial therapy to maintain RV preload."
+  },
+  {
+    "chunk_id": "chunk_conflict_001a",
+    "source": "2020 Regional Emergency Cardiac Protocol",
+    "clinical_topic": "Supplemental Oxygen Therapy in Acute STEMI",
+    "disease_category": "Acute Coronary Syndrome (STEMI)",
+    "content": "Routine high-flow supplemental oxygen therapy (4-6 L/min via nasal cannula) is recommended for all patients presenting with suspected acute STEMI, regardless of initial arterial oxygen saturation (SpO2), to maximize myocardial tissue oxygenation."
+  },
+  {
+    "chunk_id": "chunk_conflict_001b",
+    "source": "2023 ACC/AHA STEMI Guidelines - Oxygen Therapy",
+    "clinical_topic": "Supplemental Oxygen Therapy in Normoxic STEMI",
+    "disease_category": "Acute Coronary Syndrome (STEMI)",
+    "content": "Routine supplemental oxygen therapy is NOT recommended in patients with acute STEMI who are normoxic (SpO2 >= 90%). Hyperoxia causes coronary vasoconstriction, increases systemic vascular resistance, and expands myocardial infarct size. Oxygen is indicated ONLY if SpO2 < 90% or patient is in respiratory distress."
+  }
+]

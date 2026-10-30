@@ -149,3 +149,4 @@ MedAgentX is an Adaptive Confidence-Guided Multi-Agent Retrieval (ACMR) framewor
    - `paper/main.tex` and `paper/references.bib` are complete, syntactically valid, and ready for LaTeX compilation.
 4. **App Verification**:
    - `python app.py` launches the FastAPI server and serves `ui/index.html` at `http://localhost:8000`.
+

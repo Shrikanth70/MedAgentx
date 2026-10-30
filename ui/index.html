@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedAgentX — Clinical Decision Support System</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #090d16;
+            --panel-bg: rgba(18, 26, 43, 0.75);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --accent-cyan: #06b6d4;
+            --accent-blue: #3b82f6;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(6, 182, 212, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(59, 130, 246, 0.12) 0%, transparent 40%);
+        }
+
+        header {
+            padding: 1.5rem 2rem;
+            background: rgba(9, 13, 22, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .badge-research {
+            padding: 0.4rem 0.8rem;
+            border-radius: 9999px;
+            background: rgba(6, 182, 212, 0.15);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            color: var(--accent-cyan);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        main {
+            flex: 1;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .btn-scenario {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--panel-border);
+            color: var(--text-secondary);
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-scenario:hover {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: rgba(6, 182, 212, 0.4);
+            color: var(--text-primary);
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background: rgba(9, 13, 22, 0.6);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 1rem;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+            color: #ffffff;
+            border: none;
+            padding: 0.9rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.9;
+        }
+
+        .meter-container {
+            background: rgba(9, 13, 22, 0.6);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .meter-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .meter-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .meter-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+
+        .progress-bar-bg {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #06b6d4, #10b981);
+            transition: width 0.6s ease;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 0.6rem;
+            text-align: center;
+        }
+
+        .metric-card label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            display: block;
+        }
+
+        .metric-card span {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .report-box {
+            background: rgba(9, 13, 22, 0.6);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            min-height: 180px;
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .alert-box {
+            padding: 1rem;
+            border-radius: 10px;
+            background: rgba(244, 63, 94, 0.15);
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            color: var(--accent-rose);
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        .trace-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .trace-item {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: 0.4rem 0.8rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 2px solid var(--accent-cyan);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <h1>MedAgentX</h1>
+            <p>Adaptive Confidence-Guided Multi-Agent Clinical Support</p>
+        </div>
+        <div class="badge-research">ACMR Research Prototype</div>
+    </header>
+
+    <main>
+        <!-- Left Column: Query Input & Case Scenarios -->
+        <section class="panel">
+            <div class="panel-title">
+                <span>🩺</span> Clinical Consultation Query
+            </div>
+
+            <div class="scenarios-grid">
+                <button class="btn-scenario" onclick="loadScenario(1)">
+                    <strong>STEMI DAPT</strong><br>Acute Coronary Loading
+                </button>
+                <button class="btn-scenario" onclick="loadScenario(2)">
+                    <strong>HFrEF Therapy</strong><br>Quad-Therapy Protocol
+                </button>
+                <button class="btn-scenario" onclick="loadScenario(3)">
+                    <strong>CAP Regimen</strong><br>Outpatient Pneumonia
+                </button>
+                <button class="btn-scenario" onclick="loadScenario(4)">
+                    <strong>Contradiction Warning</strong><br>RV Infarction & Nitroglycerin
+                </button>
+            </div>
+
+            <textarea id="queryInput" placeholder="Enter patient clinical presentation, symptoms, diagnosis, or treatment question..."></textarea>
+
+            <button class="btn-submit" onclick="runConsultation()">
+                <span>⚡</span> Run ACMR Consultation
+            </button>
+
+            <!-- Execution Trace -->
+            <div class="panel-title" style="margin-top: 1rem;">
+                <span>📜</span> Active Agent Execution Trace
+            </div>
+            <ul id="traceList" class="trace-list">
+                <li class="trace-item">Ready for clinical consultation input.</li>
+            </ul>
+        </section>
+
+        <!-- Right Column: Results, Confidence Score, & Report -->
+        <section class="panel">
+            <div class="panel-title">
+                <span>📊</span> Evidence Confidence & Synthesis
+            </div>
+
+            <div id="alertBox" class="alert-box"></div>
+
+            <!-- Composite Confidence Meter -->
+            <div class="meter-container">
+                <div class="meter-header">
+                    <span class="meter-title">Composite Evidence Confidence ($C_{total}$)</span>
+                    <span id="cTotalVal" class="meter-value">0.00</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div id="cTotalBar" class="progress-bar-fill"></div>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <label>S_vec</label>
+                        <span id="sVecVal">0.00</span>
+                    </div>
+                    <div class="metric-card">
+                        <label>S_graph</label>
+                        <span id="sGraphVal">0.00</span>
+                    </div>
+                    <div class="metric-card">
+                        <label>V_agree</label>
+                        <span id="vAgreeVal">0.00</span>
+                    </div>
+                    <div class="metric-card">
+                        <label>R_contra</label>
+                        <span id="rContraVal">0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clinical Decision Report -->
+            <div class="panel-title">
+                <span>📄</span> Clinical Decision Report
+            </div>
+            <div id="reportBox" class="report-box">Run consultation to view evidence-grounded report.</div>
+        </section>
+    </main>
+
+    <script>
+        const SCENARIOS = {
+            1: "A 62-year-old male presents with severe substernal chest pressure. ECG shows ST-segment elevation in leads V1-V4. What is the immediate dual antiplatelet loading dose?",
+            2: "A 58-year-old female with heart failure with reduced ejection fraction (LVEF 30%). What baseline quad-therapy medications should be initiated?",
+            3: "An 45-year-old outpatient with community-acquired pneumonia and diabetes mellitus. What is the recommended empiric antibiotic therapy?",
+            4: "Administer sublingual nitroglycerin for severe chest pain in a patient with right ventricular infarction."
+        };
+
+        function loadScenario(num) {
+            document.getElementById('queryInput').value = SCENARIOS[num];
+        }
+
+        async function runConsultation() {
+            const query = document.getElementById('queryInput').value.trim();
+            if (!query) {
+                alert('Please enter a clinical query.');
+                return;
+            }
+
+            const reportBox = document.getElementById('reportBox');
+            const alertBox = document.getElementById('alertBox');
+            const traceList = document.getElementById('traceList');
+
+            reportBox.innerText = 'Executing ACMR dynamic routing pipeline...';
+            alertBox.style.display = 'none';
+            traceList.innerHTML = '<li class="trace-item">Initiating ACMR orchestrator...</li>';
+
+            try {
+                const response = await fetch('/api/v1/consult', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: query, system_id: 'medagentx' })
+                });
+
+                const data = await response.json();
+
+                // Update Confidence Score Meter
+                const cTotal = data.confidence || 0.0;
+                document.getElementById('cTotalVal').innerText = cTotal.toFixed(2);
+                document.getElementById('cTotalBar').style.width = (cTotal * 100) + '%';
+
+                const metrics = data.metrics || {};
+                document.getElementById('sVecVal').innerText = (metrics.s_vec || 0.0).toFixed(2);
+                document.getElementById('sGraphVal').innerText = (metrics.s_graph || 0.0).toFixed(2);
+                document.getElementById('vAgreeVal').innerText = (metrics.v_agree || 0.0).toFixed(2);
+                document.getElementById('rContraVal').innerText = (metrics.r_contra || 0.0).toFixed(2);
+
+                // Update Report
+                reportBox.innerText = data.answer;
+
+                // Update Alert Box if abstaining or contraindication
+                if (metrics.r_contra >= 0.50 || cTotal < 0.50 || metrics.route_decision === 'ABSTAIN') {
+                    alertBox.style.display = 'block';
+                    alertBox.innerHTML = '<strong>⚠️ CLINICAL SAFETY ALERT:</strong> Insufficient evidence or clinical contradiction detected. System triggered safety abstention override.';
+                }
+
+                // Update Trace List
+                if (data.trace && data.trace.length > 0) {
+                    traceList.innerHTML = data.trace.map(t => `<li class="trace-item">${t}</li>`).join('');
+                }
+            } catch (err) {
+                reportBox.innerText = 'Error executing consultation: ' + err.message;
+            }
+        }
+    </script>
+</body>
+</html>

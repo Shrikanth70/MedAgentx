@@ -1,0 +1,5 @@
+Name,URL,License,Access,Size,Format,Task,Clinical Domain,Suitability,Potential Leakage,Evaluation Use,Training Use,Restrictions
+MedQA (USMLE),https://github.com/jindingxin/MedQA,MIT,Public,12723 questions,JSONL,Multi-step Clinical QA,General Medicine / USMLE,Primary,Medium,Diagnostic Accuracy / Grounding,None,Non-commercial research
+MedMCQA,https://github.com/medmcqa/medmcqa,Apache 2.0,Public,194000 questions,JSONL,Medical Subject QA,24 Medical Specialties,Secondary,Medium,Domain Coverage,None,Open
+PubMedQA,https://pubmedqa.github.io/,MIT,Public,1000 expert pairs,JSON,Biomedical Evidence Reasoning,Biomedical Research,Primary for Evidence,Low,Verification / Citation,None,Open
+MMLU Medical,https://huggingface.co/datasets/cais/mmlu,MIT,Public,3000 questions,CSV,Medical Subject Assessment,Clinical Knowledge / Genetics,Secondary,High,Zero-shot Baseline,None,Open

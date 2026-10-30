@@ -349,3 +349,4 @@
 3. **Type consistency**: `SystemResponse`, `RouterDecision`, `ACMRRouter`, `VectorStoreClient` names are consistent across tasks. ✓
 4. **Review Focus**: All 5 edge cases from the Review Focus section are addressed — async hang fix (Task 1), `SAFETY_CONSTRAINT`→`"ABSTAIN"` normalisation (Task 2), lazy `VectorStoreClient` (Task 1), benchmark simulation labelling (Task 3), `app.py` Streamlit note (Task 5 README). ✓
 5. **Proportion**: Plan is appropriately scoped relative to the targeted changes. ✓
+

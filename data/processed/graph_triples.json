@@ -1,0 +1,62 @@
+[
+  {
+    "subject": "Acute Coronary Syndrome",
+    "predicate": "HAS_SUBTYPE",
+    "object": "STEMI",
+    "category": "Cardiology"
+  },
+  {
+    "subject": "Acute Coronary Syndrome",
+    "predicate": "HAS_SUBTYPE",
+    "object": "NSTEMI",
+    "category": "Cardiology"
+  },
+  {
+    "subject": "Acute Coronary Syndrome",
+    "predicate": "TREATED_BY",
+    "object": "Dual Antiplatelet Therapy",
+    "category": "Cardiology"
+  },
+  {
+    "subject": "Dual Antiplatelet Therapy",
+    "predicate": "INCLUDES",
+    "object": "Aspirin",
+    "category": "Pharmacology"
+  },
+  {
+    "subject": "Dual Antiplatelet Therapy",
+    "predicate": "INCLUDES",
+    "object": "Ticagrelor",
+    "category": "Pharmacology"
+  },
+  {
+    "subject": "Nitroglycerin",
+    "predicate": "CONTRAINDICATED_WITH",
+    "object": "Right Ventricular Infarction",
+    "category": "Safety"
+  },
+  {
+    "subject": "Heart Failure with Reduced Ejection Fraction",
+    "predicate": "TREATED_BY",
+    "object": "ARNI (Sacubitril/Valsartan)",
+    "category": "Cardiology"
+  },
+  {
+    "subject": "Heart Failure with Reduced Ejection Fraction",
+    "predicate": "TREATED_BY",
+    "object": "SGLT2 Inhibitor",
+    "category": "Cardiology"
+  },
+  {
+    "subject": "Community Acquired Pneumonia",
+    "predicate": "HAS_SYMPTOM",
+    "object": "Cough with Sputum",
+    "category": "Pulmonology"
+  },
+  {
+    "subject": "Community Acquired Pneumonia",
+    "predicate": "TREATED_BY",
+    "object": "Amoxicillin",
+    "category": "Infectious Disease"
+  }
+]

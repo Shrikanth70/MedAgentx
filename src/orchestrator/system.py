@@ -1,0 +1,281 @@
+"""MedAgentX Orchestrator System Entrypoint with Adaptive State & Observability."""
+
+import time
+import structlog
+from config.settings import settings
+from src.agents.planner import PlannerAgent
+from src.agents.retriever import RetrieverAgent
+from src.agents.verifier import VerifierAgent
+from src.agents.reasoner import ReasonerAgent
+from src.orchestrator.confidence import ConfidenceCalculator
+from src.orchestrator.router import ACMRRouter, RouterDecision
+from src.baselines.base import SystemResponse
+
+logger = structlog.get_logger()
+
+
+class MedAgentXSystem:
+    """MedAgentX ACMR System Orchestrator with Stateful Adaptive Loop & Safety Policy."""
+
+    def __init__(self):
+        self.system_id = "PROPOSED_MEDAGENTX"
+        self.planner = PlannerAgent()
+        self.retriever = RetrieverAgent()
+        self.verifier = VerifierAgent()
+        self.reasoner = ReasonerAgent()
+        self.router = ACMRRouter()
+
+    def query(self, user_query: str) -> SystemResponse:
+        """Execute Adaptive Confidence-Guided Multi-Agent Retrieval (ACMR) workflow."""
+        start_time = time.time()
+        trace = []
+        active_agents = 0
+
+        # Initial Plan
+        plan = self.planner.plan(user_query)
+        active_agents += 1
+        trace.append("Activated Agent 1: Planner & Reformulator")
+
+        # Persistent ACMR Loop State Data Structure
+        acmr_state = {
+            "iteration": 0,
+            "previous_query": None,
+            "current_query": user_query,
+            "previous_confidence": None,
+            "current_confidence": None,
+            "confidence_delta": None,
+            "previous_document_ids": set(),
+            "current_document_ids": set(),
+            "previous_chunks": [],
+            "previous_gaps": [],
+            "evidence_overlap": 0.0,
+            "evidence_novelty": 1.0,
+            "retrieval_gap": "NONE",
+            "router_reason": "",
+            "contradiction_type": "NONE",
+            "safety_severity": "NONE",
+            "safety_signal": False,
+            "evidence_conflict": False,
+            "clinical_context": "",
+            "intervention": "",
+            "safety_reason": "",
+        }
+
+        iteration = 0
+        c_total = 0.0
+        prev_c = 0.0
+        delta_c = 0.0
+        current_query = user_query
+        action = "RE_RETRIEVE"
+        verifier_output = None
+        router_decision = None
+
+        while iteration <= settings.MAX_RETRIEVAL_ITERATIONS and action in ["RE_RETRIEVE", "TARGETED_RE_RETRIEVE", "QUERY_REWRITE_RE_RETRIEVE", "RESOLVE_CONTRADICTION"]:
+            acmr_state["iteration"] = iteration
+            acmr_state["previous_query"] = current_query
+
+            # Step A: Adapt Query if iteration > 0
+            if iteration > 0 and verifier_output:
+                current_query = self.planner.adapt_query(
+                    original_query=user_query,
+                    retrieval_gap=verifier_output.retrieval_gap,
+                    missing_evidence=verifier_output.missing_evidence,
+                    previous_queries=list(acmr_state["previous_gaps"]),
+                )
+                trace.append(f"Iteration {iteration} - Adapted Query: '{current_query}' (Gap: {verifier_output.retrieval_gap})")
+
+            acmr_state["current_query"] = current_query
+
+            # Step B: Agent 2 (Retriever)
+            retrieval_res = self.retriever.retrieve_evidence(
+                query_text=current_query, entities=plan.extracted_entities
+            )
+            active_agents += 1
+
+            curr_chunks = retrieval_res.vector_evidence
+            curr_chunk_ids = {c.get("chunk_id", f"chunk_{idx}") for idx, c in enumerate(curr_chunks)}
+            acmr_state["current_document_ids"] = curr_chunk_ids
+
+            # Calculate Evidence Overlap
+            if acmr_state["previous_document_ids"]:
+                overlap_count = len(curr_chunk_ids & acmr_state["previous_document_ids"])
+                evidence_overlap = round(overlap_count / max(1, len(curr_chunk_ids)), 4)
+            else:
+                evidence_overlap = 0.0
+
+            acmr_state["evidence_overlap"] = evidence_overlap
+
+            # Step C: Agent 3 (Verifier with Safety Classification)
+            verifier_output = self.verifier.verify(
+                query_text=user_query,
+                vector_evidence=curr_chunks,
+                graph_evidence=retrieval_res.graph_evidence,
+                previous_chunks=acmr_state["previous_chunks"],
+            )
+            active_agents += 1
+            acmr_state["evidence_novelty"] = verifier_output.evidence_novelty
+            acmr_state["retrieval_gap"] = verifier_output.retrieval_gap
+            acmr_state["contradiction_type"] = verifier_output.contradiction_type
+            acmr_state["safety_severity"] = verifier_output.safety_severity
+            acmr_state["safety_signal"] = verifier_output.safety_signal
+            acmr_state["evidence_conflict"] = verifier_output.evidence_conflict
+            acmr_state["clinical_context"] = verifier_output.clinical_context
+            acmr_state["intervention"] = verifier_output.intervention
+            acmr_state["safety_reason"] = verifier_output.safety_reason
+
+            # Step D: Calculate Composite Confidence & Delta C
+            c_total = ConfidenceCalculator.calculate_composite_confidence(
+                s_vec=retrieval_res.s_vec,
+                s_graph=retrieval_res.s_graph,
+                v_agree=verifier_output.v_agree,
+                r_contra=verifier_output.r_contra,
+                s_rel=verifier_output.s_rel,
+                completeness=verifier_output.evidence_completeness,
+                novelty=verifier_output.evidence_novelty,
+                contradiction_type=verifier_output.contradiction_type,
+            )
+            acmr_state["current_confidence"] = c_total
+
+            if iteration > 0 and acmr_state["previous_confidence"] is not None:
+                delta_c = round(c_total - acmr_state["previous_confidence"], 4)
+            else:
+                delta_c = 0.0
+
+            acmr_state["confidence_delta"] = delta_c
+
+            # Loop Detection Check
+            is_loop_detected = (
+                iteration > 0
+                and (
+                    (current_query == acmr_state["previous_query"] and evidence_overlap >= 0.85)
+                    or (evidence_overlap >= 0.85 and abs(delta_c) < 0.01)
+                )
+            )
+
+            if is_loop_detected:
+                trace.append("ACMR Loop Detector: Identical retrieval state detected. Halting repetition.")
+
+            # Step E: ACMR Router Decision
+            router_decision = self.router.route_explainable(
+                c_total=c_total,
+                delta_c=delta_c,
+                retrieval_gap=verifier_output.retrieval_gap,
+                missing_evidence=verifier_output.missing_evidence,
+                s_rel=verifier_output.s_rel,
+                r_contra=verifier_output.r_contra,
+                contradiction_type=verifier_output.contradiction_type,
+                safety_severity=verifier_output.safety_severity,
+                evidence_novelty=verifier_output.evidence_novelty,
+                evidence_overlap=evidence_overlap,
+                iteration=iteration,
+                is_loop_detected=is_loop_detected,
+            )
+            action = router_decision.action
+            acmr_state["router_reason"] = router_decision.reason
+
+            # Rich Observability Execution Trace Formatting (ASCII Safe)
+            obs_block = (
+                f"\n==================================================\n"
+                f"ACMR ITERATION {iteration}\n"
+                f"==================================================\n"
+                f"Original Query: {user_query}\n"
+                f"Adapted Query:  {current_query}\n"
+                f"Safety Classification: {verifier_output.contradiction_type}\n"
+                f"Safety Severity:       {verifier_output.safety_severity}\n"
+                f"Retrieval Gap:  {verifier_output.retrieval_gap}\n"
+                f"Missing Evid:   {verifier_output.missing_evidence}\n"
+                f"Retrieved Docs: {len(curr_chunks)}\n"
+                f"Evidence Overlap: {evidence_overlap:.2f}\n"
+                f"S_vec: {retrieval_res.s_vec:.2f} | S_graph: {retrieval_res.s_graph:.2f} | S_rel: {verifier_output.s_rel:.2f}\n"
+                f"V_agree: {verifier_output.v_agree:.2f} | R_contra: {verifier_output.r_contra:.2f}\n"
+                f"Novelty: {verifier_output.evidence_novelty:.2f} | Completeness: {verifier_output.evidence_completeness:.2f}\n"
+                f"C_total: {c_total:.4f} (Delta C: {'N/A' if iteration == 0 else f'{delta_c:+.4f}'})\n"
+                f"Router Action: {router_decision.action}\n"
+                f"Reason: {router_decision.reason}\n"
+                f"=================================================="
+            )
+            logger.info(obs_block)
+            trace.append(f"Iteration {iteration} -> {router_decision.action}: {router_decision.reason}")
+
+            # Update State
+            acmr_state["previous_document_ids"].update(curr_chunk_ids)
+            acmr_state["previous_chunks"].extend(curr_chunks)
+            acmr_state["previous_gaps"].append(current_query)
+            acmr_state["previous_confidence"] = c_total
+
+            if action in ["STOP_CONFIDENT", "STOP_SATURATED", "STOP_MAX_ITERATIONS", "SAFETY_CONSTRAINT", "HARD_ABSTENTION"]:
+                break
+
+            iteration += 1
+
+        # Step F: Agent 4 (Reasoner & Synthesizer) with Safety Mode Selection
+        active_agents += 1
+        trace.append(f"Activated Agent 4: Clinical Reasoner & Synthesizer (Action: {action})")
+
+        if action == "SAFETY_CONSTRAINT":
+            reasoner_output = self.reasoner.synthesize(
+                query_text=user_query,
+                verified_evidence=verifier_output.verified_evidence if verifier_output else [],
+                detected_contradictions=verifier_output.detected_contradictions if verifier_output else [],
+                c_total=c_total,
+                mode="SAFETY_CONSTRAINED",
+                intervention=acmr_state["intervention"],
+                clinical_context=acmr_state["clinical_context"],
+                safety_reason=acmr_state["safety_reason"],
+            )
+            answer = reasoner_output.clinical_report
+
+        elif action == "HARD_ABSTENTION":
+            reasoner_output = self.reasoner.synthesize(
+                query_text=user_query,
+                verified_evidence=verifier_output.verified_evidence if verifier_output else [],
+                detected_contradictions=verifier_output.detected_contradictions if verifier_output else [],
+                c_total=c_total,
+                mode="ABSTENTION",
+                safety_reason=acmr_state["safety_reason"] or router_decision.reason,
+            )
+            answer = reasoner_output.clinical_report
+
+        else:
+            reasoner_output = self.reasoner.synthesize(
+                query_text=user_query,
+                verified_evidence=verifier_output.verified_evidence if verifier_output else [],
+                detected_contradictions=verifier_output.detected_contradictions if verifier_output else [],
+                c_total=c_total,
+                mode="NORMAL",
+            )
+            answer = reasoner_output.clinical_report
+
+        latency = time.time() - start_time
+        token_count = len(user_query.split()) + len(answer.split())
+
+        return SystemResponse(
+            system_id=self.system_id,
+            query=user_query,
+            answer=answer,
+            evidence_chunks=verifier_output.verified_evidence if verifier_output else [],
+            citations=reasoner_output.citations if reasoner_output else [],
+            confidence=c_total,
+            latency_seconds=round(latency, 4),
+            token_count=token_count,
+            metadata={
+                "c_total": c_total,
+                "delta_c": delta_c,
+                "retrieval_rounds": iteration,
+                "route_decision": action,
+                "active_agent_count": active_agents,
+                "trace": trace,
+                "s_rel": verifier_output.s_rel if verifier_output else 0.0,
+                "retrieval_gap": verifier_output.retrieval_gap if verifier_output else "NONE",
+                "missing_evidence": verifier_output.missing_evidence if verifier_output else [],
+                "router_reason": router_decision.reason if router_decision else "",
+                "evidence_overlap": acmr_state["evidence_overlap"],
+                "evidence_novelty": acmr_state["evidence_novelty"],
+                "contradiction_type": acmr_state["contradiction_type"],
+                "safety_severity": acmr_state["safety_severity"],
+                "safety_signal": acmr_state["safety_signal"],
+                "evidence_conflict": acmr_state["evidence_conflict"],
+                "clinical_context": acmr_state["clinical_context"],
+                "intervention": acmr_state["intervention"],
+            },
+        )
