@@ -180,10 +180,19 @@ class ReasonerAgent:
             imp_lower = imaging_analysis.diagnostic_impression.lower()
             findings_str = " ".join([f.lower() for f in imaging_analysis.radiological_findings])
 
-            if "pneumothorax" in imp_lower or "pneumothorax" in findings_str:
+            is_ptx = (
+                ("pneumothorax" in imp_lower or "visceral pleural line" in findings_str)
+                and not any(neg in imp_lower or neg in findings_str for neg in ["no pneumothorax", "without pneumothorax", "clear lung", "normal"])
+            )
+            if is_ptx:
                 rec_lines.append("1. EMERGENT CHEST TUBE / NEEDLE DECOMPRESSION: Immediate decompression of pneumothorax prior to any positive pressure ventilation.")
                 rec_lines.append("2. OXYGENATION & MONITORED TRANSPORT: High-flow non-rebreather oxygen; prepare for tube thoracostomy.")
+            elif any(k in imp_lower for k in ["nodule", "nodules", "adenopathy", "lymphadenopathy", "mass", "hilar"]):
+                rec_lines.append("1. FLEISCHNER SOCIETY DIAGNOSTIC WORKUP: Contrast-enhanced chest CT scan and PET-CT staging evaluation.")
+                rec_lines.append("2. ENDOBRONCHIAL ULTRASOUND (EBUS-TBNA): Minimally invasive EBUS transbronchial needle aspiration of hilar/mediastinal nodes to differentiate granulomatous disease (Sarcoidosis/TB) from neoplasm.")
+                rec_lines.append("3. BASELINE BIOMARKERS & PFTs: Measure serum calcium, ACE levels, complete blood count, and pulmonary function testing (spirometry & DLCO).")
             elif "stemi" in imp_lower or "infarction" in imp_lower:
+
                 rec_lines.append("1. EMERGENCY PRIMARY PCI ACTIVATION: Immediate activation of cardiac catheterization laboratory (Door-to-Balloon < 90 min).")
                 rec_lines.append("2. ACUTE CORONARY PROTOCOL: Dual antiplatelet therapy (Aspirin 325 mg + P2Y12 inhibitor) and unfractionated heparin.")
             elif "edema" in imp_lower:

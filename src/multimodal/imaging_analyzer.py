@@ -299,7 +299,13 @@ class MedicalImagingAnalyzer:
         else:
             modality = "Chest X-Ray"
             impression = "Diagnostic Chest Examination without Acute Pathological Findings"
-            findings = ["Normal cardiothoracic anatomy and vascular distribution", "Clear lung fields with no focal consolidations, effusions, or pneumothorax"]
+            findings = ["Normal cardiothoracic anatomy and vascular distribution", "Clear lung fields and bronchovascular markings with preserved pleural boundaries and sharp costophrenic angles"]
+
+        # If an actual raw image is provided without matching rules, try Vision ML model if active
+        if isinstance(image_input, (str, bytes)):
+            vision_res = self._call_vision_model(image_input)
+            if vision_res is not None:
+                return vision_res
 
         return ImagingAnalysis(
             modality=modality,
@@ -310,5 +316,66 @@ class MedicalImagingAnalyzer:
             confidence=0.90,
             metadata=image_meta,
         )
+
+    def _call_vision_model(self, image_input: str | bytes, timeout_s: float = 30.0) -> ImagingAnalysis | None:
+        """Call local Vision ML model (qwen3-vl) to extract true radiological perception from raw image pixels."""
+        import base64
+        import json
+        import requests
+
+        b64_str = ""
+        if isinstance(image_input, str) and os.path.exists(image_input):
+            try:
+                with open(image_input, "rb") as f:
+                    b64_str = base64.b64encode(f.read()).decode("utf-8")
+            except Exception:
+                return None
+        elif isinstance(image_input, bytes):
+            b64_str = base64.b64encode(image_input).decode("utf-8")
+        else:
+            return None
+
+        payload = {
+            "model": "qwen3-vl:4b",
+            "prompt": (
+                "You are an expert diagnostic radiologist. Analyze this medical image precisely. "
+                "Output strictly valid JSON with no markdown formatting:\n"
+                "{\n"
+                '  "modality": "Chest X-Ray / CT Scan / Brain MRI / 12-Lead ECG",\n'
+                '  "radiological_findings": ["finding 1", "finding 2"],\n'
+                '  "diagnostic_impression": "Primary diagnosis / impression",\n'
+                '  "critical_urgency": "ROUTINE",\n'
+                '  "contraindicated_interventions": []\n'
+                "}"
+            ),
+            "images": [b64_str],
+            "stream": False,
+        }
+
+        try:
+            r = requests.post("http://localhost:11434/api/generate", json=payload, timeout=timeout_s)
+            if r.status_code == 200:
+                resp_text = r.json().get("response", "").strip()
+                clean_json = resp_text
+                if "```json" in clean_json:
+                    clean_json = clean_json.split("```json")[1].split("```")[0].strip()
+                elif "```" in clean_json:
+                    clean_json = clean_json.split("```")[1].split("```")[0].strip()
+
+                data = json.loads(clean_json)
+                return ImagingAnalysis(
+                    modality=data.get("modality", "Diagnostic Imaging"),
+                    radiological_findings=data.get("radiological_findings", []),
+                    diagnostic_impression=data.get("diagnostic_impression", "Radiological Evaluation"),
+                    critical_urgency=data.get("critical_urgency", "ROUTINE"),
+                    contraindicated_interventions=data.get("contraindicated_interventions", []),
+                    confidence=0.92,
+                    metadata={"source": "qwen3-vl:4b Vision ML Model"},
+                )
+        except Exception as exc:
+            logger.debug("vision_model_call_skipped", error=str(exc))
+            return None
+        return None
+
 
 

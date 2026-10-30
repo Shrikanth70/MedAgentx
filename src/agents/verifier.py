@@ -64,6 +64,9 @@ class VerifierAgent:
             query_diseases.append("hydrocephalus")
         if any(k in q_lower for k in ["hemorrhage", "hematoma", "bleed"]):
             query_diseases.append("hemorrhage")
+        if any(k in q_lower for k in ["nodule", "nodules", "adenopathy", "lymphadenopathy", "sarcoidosis"]):
+            query_diseases.append("nodule")
+
 
 
         if not query_diseases:
@@ -359,7 +362,11 @@ class VerifierAgent:
             findings_lower = " ".join([f.lower() for f in imaging.radiological_findings])
 
             # A. Pneumothorax on CXR -> Absolute Contraindication to Positive Pressure without Chest Tube
-            if "pneumothorax" in imp_lower or "pneumothorax" in findings_lower:
+            has_ptx_finding = (
+                ("pneumothorax" in imp_lower or "visceral pleural line" in findings_lower)
+                and not any(neg in imp_lower or neg in findings_lower for neg in ["no pneumothorax", "without pneumothorax", "clear lung", "normal"])
+            )
+            if has_ptx_finding:
                 out.safety_signal = True
                 out.contradiction_type = "CLINICAL_CONTRAINDICATION"
                 out.safety_severity = "HIGH"
@@ -373,6 +380,7 @@ class VerifierAgent:
                 out.intervention = "Positive-Pressure Ventilation (BiPAP/CPAP)"
                 out.clinical_context = "Acute Pneumothorax on CXR"
                 out.detected_contradictions.append(out.safety_reason)
+
 
             # B. Right Ventricular / Inferior STEMI on ECG -> Contraindicates Nitroglycerin / Preload Reducers
             elif "rv infarction" in imp_lower or "right ventricular" in imp_lower or "v4r" in findings_lower:

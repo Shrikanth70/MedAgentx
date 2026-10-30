@@ -103,5 +103,12 @@
     "clinical_topic": "Hydrocephalus & Ventriculomegaly Evaluation Protocol",
     "disease_category": "Neurology & Neurosurgery (Hydrocephalus)",
     "content": "Evaluation of Communicating Hydrocephalus / Normal Pressure Hydrocephalus (NPH): 1) Diagnostic Imaging: Brain MRI demonstrates ventricular enlargement out of proportion to sulcal enlargement, with an Evans index > 0.30 and periventricular hyperintensity reflecting transependymal CSF resorption. 2) Clinical Correlation: Characteristic clinical triad of progressive gait disturbance, cognitive impairment, and urinary urgency/incontinence. 3) Diagnostic Intervention: High-volume lumbar puncture (30-50 mL CSF tap test) with quantitative pre- and post-tap gait evaluation. 4) Definitive Treatment: Ventriculoperitoneal (VP) shunt placement in responsive candidates."
+  },
+  {
+    "chunk_id": "chunk_nodule_001",
+    "source": "Fleischner Society Guidelines for Management of Incidental Pulmonary Nodules & Mediastinal Lymphadenopathy",
+    "clinical_topic": "Pulmonary Nodules & Hilar Adenopathy Diagnostic Workup",
+    "disease_category": "Pulmonology & Thoracic Oncology (Pulmonary Nodules)",
+    "content": "For patients with solid pulmonary nodules or hilar/mediastinal lymphadenopathy detected on CXR and CT: 1) Risk Stratification: Evaluate nodule size, attenuation, margins, and patient smoking/malignancy history according to Fleischner criteria. Solid nodules > 8 mm or suspicious lymphadenopathy warrant follow-up with contrast-enhanced CT at 3 months, PET-CT scan, or tissue biopsy. 2) Tissue Sampling & Endobronchial Ultrasound (EBUS-TBNA): For enlarged hilar/mediastinal lymph nodes or central lesions, EBUS-guided transbronchial needle aspiration is the first-line minimally invasive diagnostic modality to differentiate granulomatous disease (Sarcoidosis/TB) from lymphoproliferative disorder or metastatic carcinoma. 3) Workup: Order baseline complete blood count, serum calcium, ACE levels, and pulmonary function testing (PFTs)."
   }
 ]
