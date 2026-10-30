@@ -51,26 +51,29 @@ class HybridRetriever:
 
             score = 0.0
 
-            # Direct key clinical concept boosts
+            # Direct key clinical concept boosts (skip common conversational words)
+            stopwords = {"a", "an", "the", "in", "on", "at", "to", "for", "of", "with", "and", "or", "by", "is", "are", "was", "were", "it", "from", "as", "day", "days", "year", "years", "old", "male", "female", "history"}
             for token in query_tokens:
+                if token in stopwords:
+                    continue
                 if token in topic:
-                    score += 5.0
+                    score += 6.0
                 if token in category:
-                    score += 4.0
+                    score += 5.0
                 if token in content:
                     score += 1.0
 
             # Multi-word phrase bonuses
             key_phrases = [
-                ("septic shock", 10.0), ("sepsis", 8.0), ("lactate", 5.0),
-                ("kidney injury", 8.0), ("aki", 8.0), ("hyperkalemia", 10.0),
-                ("copd", 10.0), ("asthma", 8.0), ("bronchodilator", 5.0),
-                ("dka", 10.0), ("ketoacidosis", 10.0), ("insulin", 5.0),
-                ("hfref", 10.0), ("heart failure", 8.0), ("quad", 8.0), ("four pillar", 8.0),
-                ("stemi", 10.0), ("dapt", 8.0), ("antiplatelet", 6.0),
-                ("penicillin allergy", 10.0), ("pneumonia", 8.0), ("cap", 8.0),
-                ("nitroglycerin", 10.0), ("right ventricular", 10.0),
-                ("oxygen", 8.0), ("normoxic", 10.0)
+                ("septic shock", 12.0), ("sepsis", 10.0), ("lactate", 6.0),
+                ("kidney injury", 10.0), ("aki", 10.0), ("hyperkalemia", 12.0),
+                ("copd", 12.0), ("asthma", 10.0), ("bronchodilator", 6.0),
+                ("dka", 12.0), ("ketoacidosis", 12.0), ("insulin", 6.0),
+                ("hfref", 12.0), ("heart failure", 10.0), ("quad", 10.0), ("four pillar", 10.0),
+                ("stemi", 12.0), ("dapt", 10.0), ("antiplatelet", 8.0),
+                ("penicillin allergy", 12.0), ("pneumonia", 10.0), ("cap", 10.0), ("consolidation", 8.0),
+                ("nitroglycerin", 12.0), ("right ventricular", 12.0),
+                ("oxygen", 10.0), ("normoxic", 12.0)
             ]
             for phrase, weight in key_phrases:
                 if phrase in q_lower and (phrase in topic or phrase in category or phrase in content):
@@ -81,9 +84,11 @@ class HybridRetriever:
         # Sort by score descending
         scored_chunks.sort(key=lambda x: x[0], reverse=True)
 
-        # Filter: if top chunks scored > 0, keep only scored chunks
+        # Filter: if top chunks scored > 0, keep top-scoring relevant chunks
         if scored_chunks and scored_chunks[0][0] > 0:
-            matched_chunks = [doc for score, doc in scored_chunks if score > 0]
+            top_score = scored_chunks[0][0]
+            cutoff = max(6.0, top_score * 0.50)
+            matched_chunks = [doc for score, doc in scored_chunks if score >= cutoff]
         else:
             matched_chunks = [doc for _, doc in scored_chunks]
 

@@ -184,7 +184,7 @@ class PatientVignetteParser:
             case_dict["allergies"] = [a.strip() for a in allergies_raw if a.strip()]
 
         # 5. Past Medical History
-        pmh_m = re.search(r"(?:History of|PMHx|PMH|Past Medical History)[:\s]*([^\.\n]+)", text, re.IGNORECASE)
+        pmh_m = re.search(r"(?:(?<!\b\d\s)(?<!\b\d\d\s)(?<!\bday\s)(?<!\bweek\s)(?<!\bmonth\s)(?<!\byear\s)History of|PMHx|PMH|Past Medical History)[:\s]*([^\.\n]+)", text, re.IGNORECASE)
         if pmh_m:
             pmh_raw = re.split(r"[,;]|and", pmh_m.group(1))
             case_dict["past_medical_history"] = [h.strip() for h in pmh_raw if h.strip()]

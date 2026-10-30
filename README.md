@@ -2,8 +2,9 @@
 
 ### Adaptive Confidence-Guided Multi-Agent Retrieval-Augmented Framework for Evidence-Based Clinical Decision Support
 
-[![Tests](https://img.shields.io/badge/pytest-33%2F33%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/pytest-36%2F36%20passing-brightgreen.svg)](tests/)
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
+[![Multimodal](https://img.shields.io/badge/perception-Multimodal%20CXR%20%2F%20ECG-blueviolet.svg)](#multimodal-perception--medical-imaging-engine)
 [![Paper](https://img.shields.io/badge/IEEE%20Transactions-Manuscript%20Ready-purple.svg)](paper/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Architecture](https://img.shields.io/badge/architecture-ACMR%204--Agent-orange.svg)](#system-architecture)
@@ -103,31 +104,43 @@ All tests run with built-in mock/fallback isolation, requiring no live external 
 ```bash
 pytest -v
 ```
-Expected output: **29 passed in ~11s**.
+Expected output: **36 passed in ~11s**.
 
-### 3. Real-World Patient Consultation Suite
+### 3. Multimodal Diagnostic Scan & Lab Intake Runner
+Execute realistic end-to-end multimodal perception on diagnostic imaging scans and hospital critical care panels:
+```bash
+python scripts/demo_multimodal.py
+```
+Demonstrates 4 multimodal studies:
+- **Chest X-Ray**: Lobar pneumonia consolidation mapped to inpatient CAP antimicrobial regimens.
+- **12-Lead ECG**: Acute Anterior STEMI with emergent primary PCI cath-lab activation protocol.
+- **Critical Care Lab Document**: Severe septic shock with acute kidney injury and metformin contraindication alert.
+- **Trauma CXR Safety Override**: Tension pneumothorax blocking positive-pressure ventilation (BiPAP/CPAP) and mandating immediate needle decompression / chest tube placement.
+
+### 4. Real-World Patient Consultation Suite
 Run realistic emergency, critical care, and multi-morbidity patient vignettes with automated vitals extraction and safety constraints:
 ```bash
 python scripts/demo_patient_cases.py
 ```
 Demonstrates 4 complex clinical scenarios (Septic shock with AKI, Decompensated heart failure with severe hyperkalemia, Severe CAP with penicillin anaphylaxis, and Acute COPD exacerbation with hypercapnic risk).
 
-### 4. One-Click Benchmark Reproduction
+### 5. One-Click Benchmark Reproduction
 Reproduce all empirical tables and ablation experiments in one command:
 ```bash
 python scripts/reproduce_all.py
 ```
 Output results are exported to `research/evaluation_results/benchmark_results.csv`.
 
-### 4. Launch Clinician Dashboard
+### 6. Launch Clinician Dashboard
 ```bash
-# Option A: FastAPI Backend with Web Dashboard
+# Option A: Interactive Streamlit UI with Multimodal Scan & Report Intake
+streamlit run app.py
+
+# Option B: FastAPI Backend with Web Dashboard
 python -m uvicorn src.api.app:app --host 0.0.0.0 --port 8000 --reload
 # Access Dashboard at: http://localhost:8000
-
-# Option B: Interactive Streamlit UI
-streamlit run app.py
 ```
+
 
 ### 5. Optional: Launch Database Containers
 To run with live instances of Qdrant and Neo4j:

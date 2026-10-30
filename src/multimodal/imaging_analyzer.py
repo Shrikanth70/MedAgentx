@@ -191,3 +191,4 @@ class MedicalImagingAnalyzer:
             confidence=0.90,
             metadata=image_meta,
         )
+

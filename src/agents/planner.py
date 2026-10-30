@@ -53,9 +53,7 @@ class PlannerAgent:
         logger.info("Executing Agent 1 for Real Patient Case", patient_id=getattr(patient, "patient_id", "PT-001"))
 
         # Extract focal diseases and conditions
-        entities = list(getattr(patient, "past_medical_history", []))
-        if getattr(patient, "chief_complaint", ""):
-            entities.append(patient.chief_complaint)
+        entities = [h for h in getattr(patient, "past_medical_history", []) if len(h) < 40]
         if getattr(patient, "is_hypotensive", False):
             entities.append("Hypotension")
         if getattr(patient, "is_severe_renal_impairment", False):
@@ -65,12 +63,18 @@ class PlannerAgent:
 
         imaging = getattr(patient, "imaging_analysis", None)
         if imaging is not None:
-            if imaging.modality:
-                entities.append(imaging.modality)
             if imaging.diagnostic_impression:
                 entities.append(imaging.diagnostic_impression)
+            elif imaging.modality:
+                entities.append(imaging.modality)
 
-        search_query = f"{patient.chief_complaint} {getattr(imaging, 'diagnostic_impression', '')} {' '.join(patient.past_medical_history)} {patient.clinical_question}".strip()
+        q_part = patient.clinical_question if (patient.clinical_question and not patient.clinical_question.startswith(patient.chief_complaint[:40])) else ""
+        if imaging is not None and getattr(imaging, "diagnostic_impression", ""):
+            search_query = f"{imaging.diagnostic_impression} {patient.chief_complaint} {' '.join(patient.past_medical_history)} {q_part}".strip()
+        else:
+            search_query = f"{patient.chief_complaint} {' '.join(patient.past_medical_history)} {q_part}".strip()
+
+
 
         subqueries = [
             search_query,
