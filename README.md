@@ -342,7 +342,7 @@ If you use or build upon MedAgentX in your research, please cite:
 ```bibtex
 @article{srikanth2026medagentx,
   title     = {MedAgentX: Adaptive Confidence-Guided Multi-Agent Framework for Multimodal Clinical Decision Support with Fail-Closed Safety Gating},
-  author    = {Srikanth, Bhukya and Elisharaj, Banoth and Prasanna, G. Baby Lakshmi},
+  author    = {Srikanth Bhukya and Elisharaj Banoth and  G. Baby Lakshmi Prasanna},
   journal   = {IEEE Transactions on Biomedical Engineering / Journal of Biomedical and Health Informatics (Under Review)},
   year      = {2026}
 }
