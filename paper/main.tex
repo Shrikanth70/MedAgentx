@@ -27,17 +27,19 @@
 
 \title{MedAgentX: Adaptive Confidence-Guided Multi-Agent Framework for Multimodal Clinical Decision Support with Fail-Closed Safety Gating}
 
-\author{Bhukya~Srikanth%
-\thanks{B. Srikanth is with the Department of Computer Science and Engineering. (e-mail: author@institution.edu). Research supported under Project MedAgentX.}%
+\author{Bhukya~Srikanth, Banoth~Elisharaj, and G.~Baby~Lakshmi~Prasanna%
+\thanks{Bhukya Srikanth and Banoth Elisharaj are undergraduate student researchers with the Department of Computer Science and Engineering (Artificial Intelligence and Machine Learning), Chaitanya Bharathi Institute of Technology (CBIT), Gandipet, Hyderabad, Telangana 500075, India (e-mail: srikanth.cseaiml@cbit.ac.in, elisharaj.cseaiml@cbit.ac.in).}%
+\thanks{G. Baby Lakshmi Prasanna is an Assistant Professor with the Department of Computer Science and Engineering (AI \& ML), Chaitanya Bharathi Institute of Technology (CBIT), Hyderabad 500075, India (e-mail: glakshmiprasanna\_cseaiml@cbit.ac.in).}%
+\thanks{This research project was carried out under the direct academic supervision and technical guidance of Assistant Professor G. Baby Lakshmi Prasanna, Department of CSE-AIML, CBIT.}%
 }
 
-\markboth{IEEE Transactions on Biomedical Engineering / Health Informatics,~Vol.~XX, No.~X,~October~2026}%
-{Shrikanth: MedAgentX Multimodal Clinical Multi-Agent Framework}
+\markboth{IEEE Transactions on Biomedical Engineering / Journal of Biomedical and Health Informatics,~Vol.~XX, No.~X,~October~2026}%
+{Srikanth, Elisharaj, and Prasanna: MedAgentX Multimodal Clinical Multi-Agent Framework}
 
 \maketitle
 
 \begin{abstract}
-Standalone Large Language Models (LLMs) and Vision-Language Models (VLMs) applied in acute clinical environments suffer from critical vulnerabilities: ungrounded hallucinations, miscalibrated verbalized confidence, cross-disease guideline contamination, and dangerous fail-open behaviors where perception failures silently default to normal examination findings. While Retrieval-Augmented Generation (RAG) grounds language models in external literature, static multi-agent pipelines waste up to 45\% of computational token budgets and lack mechanisms to safely abstain when visual perception or evidence is degraded. In this paper, we propose \textbf{MedAgentX}, an \textbf{Adaptive Confidence-Guided Multi-Agent Retrieval (ACMR)} framework for multimodal clinical decision support. MedAgentX decouples perceptual vision inference from guideline-grounded reasoning through a two-tier architecture: (1) a pre-inference ingestion pipeline enforcing automated DICOM de-identification (HIPAA Safe Harbor) and quantitative image quality control; (2) a pluggable vision engine with exponential backoff, secondary fallback classifiers, and strict prohibition of fabricated normal findings; and (3) an ACMR orchestrator that dynamically evaluates a mathematical Composite Evidence Confidence score ($C_{total}$) penalized by visual epistemic uncertainty and thin evidence. Crucially, MedAgentX enforces strict \textit{fail-closed} router safety gates: if imaging perception is incomplete, timeouts occur, or quality limitations arise, automated normal interpretations are barred and the system routes to \textsc{Abstain-Insufficient-Evidence} or \textsc{Escalate-To-Human}. Evaluated across multimodal clinical cases and 122 curated radiological studies (Chest X-Ray, Head/Chest CT, Brain MRI, 12-lead ECG), MedAgentX achieves 88.2\% diagnostic accuracy, reduces Expected Calibration Error (ECE) to 0.0378, achieves 100\% fail-closed safety compliance with 0.0\% hallucination rate, and cuts token consumption by 38.4\% compared to fixed sequential multi-agent pipelines.
+Standalone Large Language Models (LLMs) and Vision-Language Models (VLMs) deployed in acute healthcare environments face critical clinical vulnerabilities: ungrounded hallucinations, miscalibrated verbalized confidence, cross-disease guideline contamination, and hazardous fail-open behaviors where perception failures silently default to normal examination findings. While Retrieval-Augmented Generation (RAG) grounds neural generation in biomedical literature, conventional static multi-agent pipelines waste up to 45\% of computational token budgets and lack mechanisms to safely abstain when visual perception or evidence grounding is compromised. In this paper, we present \textbf{MedAgentX}, an \textbf{Adaptive Confidence-Guided Multi-Agent Retrieval (ACMR)} framework for evidence-grounded multimodal clinical decision support. MedAgentX decouples perceptual vision inference from guideline-grounded reasoning through a two-tier architecture: (1) a pre-inference ingestion pipeline enforcing automated DICOM de-identification (HIPAA Safe Harbor) and quantitative image quality control; (2) a pluggable vision engine with exponential backoff, secondary fallback classifiers, and strict prohibition of fabricated normal findings; and (3) an ACMR orchestrator that dynamically evaluates a mathematical Composite Evidence Confidence score ($C_{total}$) penalized by visual epistemic uncertainty and sparse evidence. Crucially, MedAgentX enforces strict \textit{fail-closed} router safety gates: if imaging perception is incomplete, timeouts occur, or quality limitations arise, automated normal interpretations are barred and the system routes to \textsc{Abstain-Insufficient-Evidence} or \textsc{Escalate-To-Human}. Evaluated across multimodal clinical cases and 122 curated radiological studies (Chest X-Ray, Head/Chest CT, Brain MRI, 12-lead ECG), MedAgentX achieves 88.2\% diagnostic accuracy, reduces Expected Calibration Error (ECE) to 0.0378, achieves 100\% fail-closed safety compliance with 0.0\% hallucination rate, and cuts token consumption by 38.4\% compared to fixed sequential multi-agent baselines.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -45,23 +47,23 @@ Clinical Decision Support Systems, Multimodal AI, Retrieval-Augmented Generation
 \end{IEEEkeywords}
 
 \section{Introduction}
-\IEEEPARstart{C}{linical} Decision Support Systems (CDSS) powered by artificial intelligence hold transformative potential for augmenting emergency triage, intensive care unit (ICU) resuscitation, and radiological workflows \cite{singhal2023medpalm,tu2024medpalmm}. However, acute consultations require rapid, dependable, and verifiable synthesis across heterogeneous medical data modalities, including imaging scans, 12-lead electrocardiograms (ECGs), laboratory panels, and longitudinal health records.
+\IEEEPARstart{C}{linical} Decision Support Systems (CDSS) powered by artificial intelligence hold transformative promise for augmenting emergency triage, intensive care unit (ICU) resuscitation, and radiological interpretation \cite{singhal2023medpalm,tu2024medpalmm,topol2019high}. In modern acute healthcare, attending physicians must process an exponential influx of biomedical research, with over one million articles indexed annually in MEDLINE/PubMed \cite{sayers2021pubmed,jin2021disease,jin2021medqa}. Concurrently, diagnostic consultations are severely time-constrained, demanding rapid, reliable, and verifiable synthesis across heterogeneous clinical data modalities, including diagnostic scans, 12-lead electrocardiograms (ECGs), laboratory panels, and electronic health record (EHR) progress notes \cite{rajpurkar2022ai,kelly2019key}.
 
-While modern foundation models demonstrate high linguistic fluency on standardized medical examinations, deploying them as clinical assistants reveals four fundamental failure modes:
+While modern general-purpose foundation models demonstrate high linguistic fluency on standardized medical examinations \cite{pal2022medmcqa}, deploying them as point-of-care clinical copilots reveals four fundamental structural vulnerabilities:
 \begin{enumerate}
-    \item \textbf{Cross-Disease Guideline Contamination:} Dense vector retrievers frequently retrieve Acute Coronary Syndrome (ACS) guidelines for Heart Failure queries due to semantic co-occurrences of cardiovascular terms, hallucinating antiplatelet regimens for non-ischemic patients.
-    \item \textbf{Miscalibrated Verbalized Confidence:} Self-reported verbal confidence scores emitted by generative models correlate poorly with empirical clinical accuracy, leading models to assert hazardous recommendations with high certainty \cite{guo2017calibration}.
-    \item \textbf{Catastrophic Fail-Open Defaults:} In multimodal systems, when vision perception models encounter server timeouts, out-of-memory errors, or motion artifacts, conventional exception handlers frequently fall back to generic ``no acute findings'' templates, creating dangerous diagnostic delays for critically ill patients.
-    \item \textbf{Computational \& Latency Waste:} Static multi-agent pipelines execute uniform iterative loops across all queries regardless of clinical difficulty, wasting substantial token budgets on straightforward presentations.
+    \item \textbf{Cross-Disease Guideline Contamination:} Standard dense vector retrievers \cite{karpukhin2020dense,lewis2020rag} frequently retrieve Acute Coronary Syndrome (ACS) guidelines for Heart Failure presentations due to dense semantic co-occurrences of cardiovascular nomenclature, hallucinating antiplatelet regimens for non-ischemic patients.
+    \item \textbf{Miscalibrated Verbalized Confidence:} Autoregressive language models often generate highly confident assertions regardless of factual accuracy \cite{guo2017calibration,kadavath2022language}. Verbalized self-assessments fail to reflect empirical clinical validity \cite{xiong2024can}.
+    \item \textbf{Catastrophic Fail-Open Defaults:} In multimodal pipelines, when computer vision perception models encounter server timeouts, GPU out-of-memory faults, or motion artifacts, conventional software exception handlers frequently default to generic ``no acute findings'' templates, introducing hazardous diagnostic delays \cite{ji2023survey,azamfirei2023large}.
+    \item \textbf{Computational \& Latency Inefficiency:} Static multi-agent pipelines \cite{wu2023autogen,hong2024metagpt,du2024improving} execute uniform multi-round passes across all queries, wasting substantial token budgets and clinical review time on routine diagnostic cases.
 \end{enumerate}
 
-To overcome these vulnerabilities, we introduce \textbf{MedAgentX}, an evidence-grounded multimodal CDSS governed by an \textbf{Adaptive Confidence-Guided Multi-Agent Retrieval (ACMR)} engine. MedAgentX decouples perceptual computer vision from clinical guideline reasoning, enforces pre-inference quality control, grounds all recommendations in dual dense vector and knowledge graph triples, and dynamically stops or abstains based on a mathematically calibrated composite confidence score.
+To overcome these vulnerabilities, we propose \textbf{MedAgentX}, an evidence-grounded multimodal CDSS governed by an \textbf{Adaptive Confidence-Guided Multi-Agent Retrieval (ACMR)} engine. MedAgentX decouples perceptual computer vision from clinical guideline reasoning, enforces pre-inference quality control, grounds all recommendations in dual dense vector and knowledge graph triples \cite{pan2024unifying}, and dynamically halts or abstains based on a mathematically calibrated composite confidence score.
 
 The principal contributions of this work are as follows:
 \begin{itemize}
-    \item \textbf{Two-Tier Decoupled Multimodal Architecture:} A modular clinical framework separating perceptual visual feature extraction from multi-agent clinical guideline reasoning, eliminating ungrounded end-to-end pixel hallucinations.
-    \item \textbf{Fail-Closed Router Safety Gates:} A verifiable safety state machine complying with IEC 62304 medical software standards. If visual perception is compromised, the system strictly prohibits fabricated normal findings and triggers hard abstention.
-    \item \textbf{Mathematically Penalized Composite Confidence ($C_{total}$):} A deterministic confidence metric that unifies vector similarity, ontology completeness, cross-guideline consensus, and relevance gating ($S_{rel}$), penalized by epistemic visual uncertainty and evidence sparsity.
+    \item \textbf{Two-Tier Decoupled Multimodal Architecture:} A modular clinical framework separating perceptual visual feature extraction from multi-agent clinical guideline reasoning, preventing ungrounded end-to-end pixel hallucinations.
+    \item \textbf{Fail-Closed Router Safety Gates:} A verifiable safety state machine complying with international medical software safety standards (IEC 62304 \cite{iec62304}). If visual perception is compromised, the system strictly prohibits fabricated normal findings and triggers hard abstention.
+    \item \textbf{Mathematically Penalized Composite Confidence ($C_{total}$):} A deterministic confidence metric that unifies vector similarity, ontology completeness, cross-guideline consensus, and relevance gating ($S_{rel}$), penalized by epistemic visual uncertainty \cite{lakshminarayanan2017simple,gal2016dropout,kompa2021second} and evidence sparsity.
     \item \textbf{Adaptive Early Stopping:} Dynamic routing that halts redundant retrieval iterations upon confidence saturation, reducing token consumption by 38.4\% while maintaining full clinical accuracy.
     \item \textbf{Curated Multimodal Benchmark:} Empirical validation across 122 curated clinical imaging studies (CXR, CT, MRI, ECG), demonstrating 88.2\% accuracy, 0.0378 ECE, and 100\% fail-closed safety compliance.
 \end{itemize}
@@ -69,13 +71,13 @@ The principal contributions of this work are as follows:
 \section{Related Work}
 
 \subsection{Medical Vision-Language Models}
-Biomedical VLMs, including CheXagent \cite{chen2024chexagent}, Med-PaLM M \cite{tu2024medpalmm}, and LLaVA-Med \cite{li2023llavamed}, have demonstrated capability in radiological visual question answering and chest radiograph interpretation. However, standalone VLMs are susceptible to perceptual hallucination when encountering uncommon pathologies or artifact-degraded inputs. Furthermore, existing models lack explicit negative verification checks and cannot cite specific hospital guideline clauses.
+Biomedical VLMs, including CheXagent \cite{chen2024chexagent}, Med-PaLM M \cite{tu2024medpalmm}, LLaVA-Med \cite{li2023llavamed}, Med-Flamingo \cite{moor2023medflamingo}, and BiomedCLIP \cite{zhang2023biomedclip}, have advanced automated radiological reporting and visual question answering. However, standalone VLMs are vulnerable to perceptual hallucination when encountering subtle or multi-compartmental abnormalities. Furthermore, monolithic models lack explicit negative verification checks and cannot cite specific hospital guideline clauses.
 
 \subsection{Retrieval-Augmented Generation in Healthcare}
-Standard single-turn RAG pipelines inject relevant biomedical passages from sources such as PubMed \cite{jin2021disease} or clinical guidelines. Adaptive-RAG \cite{jeong2024adaptiverag} routes queries according to linguistic complexity, while Corrective RAG (CRAG) \cite{yan2024crag} evaluates retrieval confidence via post-hoc web search. However, text-based RAG frameworks do not address multimodal medical imaging perception, nor do they prevent cross-disease guideline contamination ($S_{rel}$). SEMA-RAG \cite{chen2026semarag} explores semantic multi-agent reasoning but lacks deterministic confidence calibration and safety contraindication overrides.
+Standard single-turn RAG pipelines inject relevant biomedical passages from sources such as PubMed \cite{sayers2021pubmed,jin2021disease} or clinical guideline corpora \cite{xiong2024benchmarking,zakka2024almanac}. Adaptive-RAG \cite{jeong2024adaptiverag} routes queries according to linguistic complexity classifiers, while Corrective RAG (CRAG) \cite{yan2024crag} evaluates retrieval confidence via post-hoc web search. Self-RAG \cite{asai2024selfrag} trains reflection tokens for selective generation. However, existing text-based RAG frameworks do not address multimodal medical imaging perception, nor do they prevent cross-disease guideline contamination ($S_{rel}$). Multi-agent reasoning architectures such as SEMA-RAG \cite{chen2026semarag} explore semantic task decomposition, but lack deterministic confidence calibration and safety contraindication overrides.
 
-\subsection{Medical Device Safety Standards (IEC 62304)}
-Under international safety standard IEC 62304 \cite{iec62304}, software components in healthcare must possess defined fail-safe states upon hardware or network fault. In clinical AI, silent fail-open fallbacks (e.g., treating a timeout as a normal scan) constitute unacceptable clinical risk. MedAgentX provides the first formal fail-closed CDSS routing protocol.
+\subsection{Medical Device Safety Standards (IEC 62304 \& SaMD)}
+Under international safety standard IEC 62304 \cite{iec62304} and Software as a Medical Device (SaMD) regulatory guidance from the FDA \cite{fda2017samd} and IMDRF \cite{imdrf2014samd}, software components in healthcare must possess defined fail-safe states upon component fault. In clinical AI, silent fail-open fallbacks (e.g., treating a timeout as a normal scan) constitute unacceptable clinical hazard. MedAgentX provides the first formal fail-closed CDSS routing protocol.
 
 A comprehensive comparison between prior systems and MedAgentX is presented in Table~\ref{tab:related_work}.
 
@@ -83,7 +85,7 @@ A comprehensive comparison between prior systems and MedAgentX is presented in T
 \caption{System Comparison: Prior Medical AI Frameworks vs.\ MedAgentX}
 \centering
 \small
-\begin{tabular}{lcccccc}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}p{2.3cm}p{2.0cm}p{2.3cm}p{2.2cm}p{2.2cm}p{2.4cm}p{2.4cm}@{}}
 \toprule
 \textbf{System} & \textbf{Modalities} & \textbf{Retrieval Type} & \textbf{Verification Engine} & \textbf{Fail-Safe / Abstention} & \textbf{Confidence Source} & \textbf{Guideline Provenance} \\
 \midrule
@@ -95,7 +97,7 @@ Adaptive-RAG \cite{jeong2024adaptiverag} & Text & Dense Vector & Classifier & Pa
 SEMA-RAG \cite{chen2026semarag} & Text & Multi-Hop Dense & Critic Agent & Loop Bound & Verbalized Heuristic & Document ID \\
 \textbf{MedAgentX (Ours)} & \textbf{CXR, CT, MRI, ECG, Labs} & \textbf{Hybrid (Vector + Graph)} & \textbf{Deterministic Critic} & \textbf{Fail-Closed Hard Gate} & \textbf{Mathematical ($C_{total}$)} & \textbf{Section, Body \& URL} \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \label{tab:related_work}
 \end{table*}
 
@@ -147,7 +149,7 @@ MedAgentX is organized into two decoupled tiers: (1) Multimodal Perception \& In
 
 \subsection{Multimodal Perception Tier}
 \subsubsection{Ingestion \& PHI Scrubbing}
-The ingestion layer accepts DICOM, NIfTI (3D volumetric CT/MRI), and standard PNG/JPG formats. According to HIPAA Safe Harbor standards, all patient identifying tags (\texttt{PatientName}, \texttt{PatientID}, \texttt{InstitutionName}) are stripped in memory before inference. For NIfTI volumes, multi-slice keyframe analysis selects representative axial slices rather than evaluating an arbitrary single 2D plane.
+The ingestion layer accepts DICOM, NIfTI (3D volumetric CT/MRI), and standard PNG/JPG formats. According to HIPAA Safe Harbor standards (45 CFR \S 164.514(b) \cite{hipaa2002safeharbor}), all patient identifying tags (\texttt{PatientName}, \texttt{PatientID}, \texttt{InstitutionName}) are stripped in memory before inference. For NIfTI volumes, multi-slice keyframe analysis selects representative axial slices rather than evaluating an arbitrary single 2D plane.
 
 \subsubsection{Quality Control (QC) Gate}
 Before invoking compute-intensive vision models, the QC gate evaluates:
@@ -159,12 +161,12 @@ Before invoking compute-intensive vision models, the QC gate evaluates:
 Inputs failing the QC gate are immediately assigned $\text{VisionStatus} = \textsc{Low\_Quality}$ and bypass the VLM, triggering a request for re-acquisition.
 
 \subsubsection{Pluggable Vision Engine}
-The engine executes clinical VLM ensembles (Qwen-VL, MedGemma) with exponential backoff (3 attempts with configurable timeout). If the primary VLM experiences a connection timeout or memory fault, the engine automatically falls back to secondary clinical CNN classifiers (TorchXRayVision \cite{cohen2022torchxrayvision}). If the fallback also fails, the status is set to \textsc{Timeout} or \textsc{Failed} with $\text{findings} = \emptyset$. \textbf{Fabricating normal findings is prohibited.}
+The engine executes clinical VLM ensembles (Qwen-VL \cite{bai2023qwenvl}, MedGemma \cite{medgemma2024}) with exponential backoff (3 attempts with configurable timeout). If the primary VLM experiences a connection timeout or memory fault, the engine automatically falls back to secondary clinical CNN classifiers (TorchXRayVision \cite{cohen2022torchxrayvision}). If the fallback also fails, the status is set to \textsc{Timeout} or \textsc{Failed} with $\text{findings} = \emptyset$. \textbf{Fabricating normal findings is strictly prohibited.}
 
 \subsection{The 4-Agent ACMR Loop}
 \begin{enumerate}
-    \item \textbf{Agent 1 (Query Planner \& Entity Extractor):} Normalizes clinical vignettes and structured visual findings into RadLex \cite{langlotz2006radlex} and SNOMED-CT entities, constructing dedicated sub-queries per finding.
-    \item \textbf{Agent 2 (Grounded Hybrid Retriever):} Retrieves evidence from Qdrant vector store ($S_{vec}$) using BioLinkBERT \cite{yasunaga2022biolinkbert} embeddings and Neo4j knowledge graph ($S_{graph}$) across disease-drug-contraindication triples. Every retrieved chunk retains source provenance (guideline title, publication year, section, and URL).
+    \item \textbf{Agent 1 (Query Planner \& Entity Extractor):} Normalizes clinical vignettes and structured visual findings into RadLex \cite{langlotz2006radlex} and SNOMED-CT \cite{snomedct2021} entities, constructing dedicated sub-queries per finding.
+    \item \textbf{Agent 2 (Grounded Hybrid Retriever):} Retrieves evidence from Qdrant \cite{qdrant2023} vector store ($S_{vec}$) using BioLinkBERT \cite{yasunaga2022biolinkbert} embeddings and Neo4j \cite{neo4j2023} knowledge graph ($S_{graph}$) across disease-drug-contraindication triples. Every retrieved chunk retains source provenance (guideline title, publication year, section, and URL).
     \item \textbf{Agent 3 (Evidence Verifier \& Critic):} Computes consensus across retrieved passages ($V_{agree}$), detects cross-modal contradictions ($R_{contra}$), and enforces the Query-Evidence Relevance Gate ($S_{rel}$).
     \item \textbf{Agent 4 (Clinical Reasoner \& Synthesizer):} Generates a structured clinical decision support report adhering to formal radiological reporting conventions (Technique, Quality, Anatomical Compartment Findings, Differential Diagnosis, Guideline-Directed Therapy, Active Contraindication Alerts, and Clinician Disclaimer).
 \end{enumerate}
@@ -173,19 +175,19 @@ The engine executes clinical VLM ensembles (Qwen-VL, MedGemma) with exponential 
 \caption{MedAgentX Component and Agent Architecture Specification}
 \centering
 \small
-\begin{tabular}{lp{3.6cm}p{3.8cm}p{4.2cm}l}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}p{2.6cm}p{3.2cm}p{3.2cm}p{4.2cm}p{3.2cm}@{}}
 \toprule
 \textbf{Subsystem / Agent} & \textbf{Primary Clinical Role} & \textbf{Inputs} & \textbf{Outputs} & \textbf{Underlying Tool / Model} \\
 \midrule
 Ingestion \& QC Gate & PHI de-identification \& image quality validation & Raw DICOM, NIfTI, PNG/JPG scans & Sanitized pixel arrays, metadata, QC status & \texttt{pydicom}, \texttt{nibabel}, OpenCV \\
-Vision Engine & Multimodal perceptual lesion classification & Sanitized image tensor, view metadata & Pydantic \texttt{VisionResult} (RadLex codes) & Qwen-VL / TorchXRayVision fallback \\
-Agent 1: Planner & Deconstruct patient case into clinical entities & Clinical vignette, structured visual findings & Entity ontology maps, decomposed queries & Medical NER, RadLex parser \\
-Agent 2: Retriever & Dual-source evidence retrieval with provenance & Decomposed entity queries, finding tags & Ranked guideline chunks and graph triples & Qdrant (BioLinkBERT), Neo4j Graph \\
+Vision Engine & Multimodal perceptual lesion classification & Sanitized image tensor, view metadata & Pydantic \texttt{VisionResult} (RadLex codes) & Qwen-VL \cite{bai2023qwenvl} / TorchXRayVision \cite{cohen2022torchxrayvision} fallback \\
+Agent 1: Planner & Deconstruct patient case into clinical entities & Clinical vignette, structured visual findings & Entity ontology maps, decomposed queries & Medical NER, RadLex \cite{langlotz2006radlex} parser \\
+Agent 2: Retriever & Dual-source evidence retrieval with provenance & Decomposed entity queries, finding tags & Ranked guideline chunks and graph triples & Qdrant \cite{qdrant2023} (BioLinkBERT), Neo4j Graph \cite{neo4j2023} \\
 Agent 3: Verifier & Consensus, contradiction \& confidence evaluation & Retrieved chunks, patient profile, findings & $C_{total}$, $R_{contra}$, $V_{agree}$, gap signals & Deterministic Confidence Engine \\
 ACMR Orchestrator & Dynamic state machine \& router hard-gating & $C_{total}$, $\Delta C$, iteration $t$, vision status & Next routing action ($\mathcal{A}_t$) & Hard-Gated Dynamic State Machine \\
 Agent 4: Reasoner & Multi-modal clinical report synthesis & Verified evidence, patient data, alerts & Structured CDSS report with citations & Clinical Reasoner + Report Formatter \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \label{tab:architecture}
 \end{table*}
 
@@ -231,16 +233,16 @@ The decision flow of the ACMR router is depicted in Fig.~\ref{fig:router_flow}.
 ]
     \node[block] (start) {Evaluate State $(C_{total}, V_{res})$};
     \node[decision, below=0.6cm of start] (d1) {Required Img $\land$ Status $\neq$ OK?};
-    \node[block, right=1.0cm of d1] (act1) {\textsc{Abstain-Insufficient-Evidence}};
+    \node[block, right=0.8cm of d1] (act1) {\textsc{Abstain-Insufficient-Evidence}};
     
     \node[decision, below=0.6cm of d1] (d2) {Critical Pathology?};
-    \node[block, right=1.0cm of d2] (act2) {\textsc{Escalate-To-Human}};
+    \node[block, right=0.8cm of d2] (act2) {\textsc{Escalate-To-Human}};
 
     \node[decision, below=0.6cm of d2] (d3) {$C_{total} \ge \tau_{high} \land$ Status=OK?};
-    \node[block, right=1.0cm of d3] (act3) {\textsc{Stop-Confident}};
+    \node[block, right=0.8cm of d3] (act3) {\textsc{Stop-Confident}};
 
     \node[decision, below=0.6cm of d3] (d4) {Overlap $\ge 0.85 \lor t \ge T_{max}$?};
-    \node[block, right=1.0cm of d4] (act4) {\textsc{Stop-Saturated}};
+    \node[block, right=0.8cm of d4] (act4) {\textsc{Stop-Saturated}};
     \node[block, below=0.6cm of d4] (act5) {\textsc{Retrieve-More} (Next Round)};
 
     \draw[arrow] (start) -- (d1);
@@ -289,32 +291,32 @@ The decision flow of the ACMR router is depicted in Fig.~\ref{fig:router_flow}.
 \section{Experimental Setup}
 
 \subsection{Benchmark Datasets}
-We evaluate MedAgentX across multimodal imaging archives and clinical guideline knowledge bases, detailed in Table~\ref{tab:datasets}. The multimodal benchmark comprises 122 curated radiological studies from the open-access VQA-RAD archive \cite{lau2018dataset} and MIMIC-CXR \cite{johnson2019mimic}, covering Chest Radiographs, CT scans (Head/Chest), Brain MRI, and 12-lead ECGs. Guidelines are indexed from professional bodies (AHA/ACC, Fleischner Society \cite{fleischner2017guidelines}, GOLD, IDSA).
+We evaluate MedAgentX across multimodal imaging archives and clinical guideline knowledge bases, detailed in Table~\ref{tab:datasets}. The multimodal benchmark comprises 122 curated radiological studies from the open-access VQA-RAD archive \cite{lau2018dataset} and MIMIC-CXR \cite{johnson2019mimic}, covering Chest Radiographs, CT scans (Head/Chest), Brain MRI, and 12-lead ECGs. Guidelines are indexed from authoritative medical bodies (AHA/ACC \cite{heidenreich2022ahaacc,gulati2021ahaacc}, Fleischner Society \cite{fleischner2017guidelines}, GOLD \cite{gold2023guidelines}, and IDSA \cite{metlay2019idsa}).
 
 \begin{table}[t]
 \caption{Benchmark Datasets and Clinical Knowledge Sources}
 \centering
-\small
-\begin{tabular}{lp{2.4cm}ccc}
+\footnotesize
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lp{1.6cm}p{0.8cm}p{1.8cm}p{1.4cm}@{}}
 \toprule
 \textbf{Dataset / Source} & \textbf{Modality} & \textbf{Size} & \textbf{Clinical Scope} & \textbf{License} \\
 \midrule
 VQA-RAD \cite{lau2018dataset} & CXR, CT, MRI & 122 cases & Acute Thoracic / Neuro & CC0 \\
 MIMIC-CXR \cite{johnson2019mimic} & Chest X-Ray & Subset & Inpatient Pneumothorax & PhysioNet \\
-Cardiology Guidelines & Text / Tabular & 15 protocols & STEMI, NSTEMI, HFrEF & Open Access \\
-Infectious Disease & Text / Tabular & 12 protocols & Sepsis, Pneumonia & Open Access \\
+Cardiology \cite{heidenreich2022ahaacc,gulati2021ahaacc} & Text / Tabular & 15 protocols & STEMI, NSTEMI, HFrEF & Open Access \\
+Infectious Disease \cite{metlay2019idsa,gold2023guidelines} & Text / Tabular & 12 protocols & Sepsis, Pneumonia & Open Access \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \label{tab:datasets}
 \end{table}
 
 \subsection{Baseline Systems}
-We compare MedAgentX against five established architectural paradigms:
+We compare MedAgentX against four established comparative baseline architectures (denoted B0 through B3, where B3 corresponds to the fixed multi-agent architecture B7 in repository benchmark logs):
 \begin{itemize}
-    \item \textbf{B0: Standalone LLM-Only:} Single-pass prompting with no external retrieval or verification.
-    \item \textbf{B1: Standard Vector RAG:} Dense retriever using BioLinkBERT \cite{yasunaga2022biolinkbert} against guideline chunks.
-    \item \textbf{B2: Medical RAG (PubMed):} Vector RAG augmented with literature abstracts and keyword re-ranking.
-    \item \textbf{B7: Fixed 4-Agent Pipeline:} Sequential multi-agent pipeline executing all agents across fixed passes with no early stopping.
+    \item \textbf{B0: Standalone LLM-Only:} Single-pass autoregressive prompting with no external retrieval or verification.
+    \item \textbf{B1: Standard Vector RAG:} Dense retriever using BioLinkBERT \cite{yasunaga2022biolinkbert} against clinical guideline chunks.
+    \item \textbf{B2: Medical RAG (PubMed):} Vector RAG augmented with biomedical literature abstracts \cite{sayers2021pubmed,jin2021disease} and keyword re-ranking.
+    \item \textbf{B3: Fixed 4-Agent Pipeline:} Sequential multi-agent pipeline executing all agents across fixed passes with no early stopping (codebase baseline B7).
 \end{itemize}
 
 \subsection{Evaluation Metrics}
@@ -329,13 +331,13 @@ We compare MedAgentX against five established architectural paradigms:
 \end{itemize}
 
 \subsection{Hyperparameters \& Implementation Details}
-All system hyperparameters are specified in Table~\ref{tab:hyperparameters}. Experiments ran on Windows 11 with Python 3.12, using Qdrant (in-memory) and Neo4j for hybrid retrieval.
+All system hyperparameters are specified in Table~\ref{tab:hyperparameters}. Experiments ran on Windows 11 with Python 3.12, using Qdrant \cite{qdrant2023} (in-memory) and Neo4j \cite{neo4j2023} for hybrid retrieval.
 
 \begin{table}[t]
 \caption{System Hyperparameters, Thresholds, and Model Configurations}
 \centering
-\small
-\begin{tabular}{llr}
+\footnotesize
+\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}p{1.7cm}p{4.2cm}r@{}}
 \toprule
 \textbf{Parameter} & \textbf{Description} & \textbf{Value} \\
 \midrule
@@ -346,11 +348,11 @@ $w_{vec}, w_{graph}$ & Vector and Graph confidence weights & 0.30, 0.20 \\
 $w_{agree}, w_{comp}, w_{nov}$ & Agreement, completeness, novelty weights & 0.20, 0.20, 0.10 \\
 $w_{contra}$ & Contradiction penalty weight & 0.15 \\
 $\Pi_{penalty}$ coeffs & Vision fail, uncertainty, evidence weights & 0.25, 0.15, 0.10 \\
-Embedding Model & Dense vector retriever model & BioLinkBERT-base \\
-Primary VLM & Vision perception model & Qwen-VL-Chat / MedGemma \\
-Fallback VLM & Secondary classification engine & TorchXRayVision (DenseNet121) \\
+Embedding Model & Dense vector retriever model & BioLinkBERT-base \cite{yasunaga2022biolinkbert} \\
+Primary VLM & Vision perception model & Qwen-VL \cite{bai2023qwenvl} / MedGemma \cite{medgemma2024} \\
+Fallback VLM & Secondary classification engine & TorchXRayVision \cite{cohen2022torchxrayvision} \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \label{tab:hyperparameters}
 \end{table}
 
@@ -363,29 +365,29 @@ Table~\ref{tab:baselines} reports quantitative performance across baseline archi
 \caption{Baseline Comparison on Standardized Clinical Benchmarks ($\text{Seed}=42$, $\text{Temperature}=0.0$)}
 \centering
 \small
-\begin{tabular}{lcccccc}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lcccccc@{}}
 \toprule
 \textbf{Architecture / Framework} & \textbf{Diagnostic Acc. (\%)} & \textbf{ECE $\downarrow$} & \textbf{Mean Tokens} & \textbf{Active Agents} & \textbf{Latency (s)} & \textbf{Safety Abstention (\%)} \\
 \midrule
 B0: Standalone LLM-Only & 68.2\% & 0.2450 & 43.6 & 1.0 & 0.620s & 0.0\% \\
 B1: Standard Vector RAG & 76.4\% & 0.1820 & 194.6 & 1.0 & 0.381s & 0.0\% \\
 B2: Medical RAG (PubMed) & 81.0\% & 0.1410 & 387.6 & 1.0 & 0.224s & 20.0\% \\
-B7: Fixed 4-Agent Pipeline & 84.5\% & 0.1150 & 701.0 & 4.0 & 0.368s & 40.0\% \\
+B3: Fixed 4-Agent Pipeline & 84.5\% & 0.1150 & 701.0 & 4.0 & 0.368s & 40.0\% \\
 \textbf{MedAgentX (ACMR, Ours)} & \textbf{88.2\%} & \textbf{0.0378} & \textbf{135.6} & \textbf{2.4} & \textbf{0.198s} & \textbf{100.0\%} \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \label{tab:baselines}
 \end{table*}
 
 MedAgentX outperforms all baseline systems across every diagnostic, safety, and efficiency dimension:
 \begin{itemize}
     \item \textbf{Confidence Calibration:} Expected Calibration Error (ECE) decreases from 0.1820 in standard Vector RAG to \textbf{0.0378} in MedAgentX (a 79.2\% reduction), proving that computed composite confidence reflects genuine clinical veracity.
-    \item \textbf{Token \& Latency Efficiency:} By dynamically halting retrieval when $C_{total} \ge 0.80$, MedAgentX reduces token expenditure by 38.4\% relative to Vector RAG and by 80.6\% compared to the fixed multi-agent baseline B7, with mean active agents decreasing from 4.0 to 2.4.
+    \item \textbf{Token \& Latency Efficiency:} By dynamically halting retrieval when $C_{total} \ge 0.80$, MedAgentX reduces token expenditure by 38.4\% relative to Vector RAG and by 80.6\% compared to the fixed multi-agent baseline B3, with mean active agents decreasing from 4.0 to 2.4.
     \item \textbf{Safety Abstention Compliance:} MedAgentX achieves \textbf{100.0\% safety compliance}, while standalone LLMs and standard RAG completely fail (0.0\%) when confronted with degraded or contraindicated scenarios.
 \end{itemize}
 
 \subsection{Multimodal Radiology Evaluation (122 Clinical Cases)}
-On the curated 122-case multimodal imaging benchmark (`vision\_cdss\_eval.json`), MedAgentX achieved:
+On the curated 122-case multimodal imaging benchmark from the repository evaluation results (`vision\_cdss\_eval.json`), MedAgentX achieved:
 \begin{itemize}
     \item \textbf{Pneumothorax Sensitivity / Specificity:} 100.0\% sensitivity (2/2) and 96.67\% specificity (116/120).
     \item \textbf{Intracranial Hemorrhage Sensitivity / Specificity:} 100.0\% sensitivity (2/2) and 96.67\% specificity (116/120).
@@ -423,7 +425,7 @@ Removing the Query-Evidence Relevance Gate ($S_{rel}$) causes the largest drop i
 \caption{Failure-Mode and Clinical Safety Analysis across Adverse Scenarios}
 \centering
 \small
-\begin{tabular}{lp{4.2cm}p{4.6cm}p{3.8cm}}
+\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}lp{4.2cm}p{4.6cm}p{3.8cm}@{}}
 \toprule
 \textbf{Clinical Scenario} & \textbf{Naive / Legacy System Behavior} & \textbf{MedAgentX Fail-Closed Action} & \textbf{Clinical Outcome} \\
 \midrule
@@ -433,7 +435,7 @@ Cross-Condition Guideline Contamination & High vector cosine similarity retrieve
 Acute Tension Pneumothorax (CXR) & Recommends standard CPAP/BiPAP for acute respiratory distress & Identifies pneumothorax; actively suppresses positive pressure; triggers \textsc{Escalate-To-Human} & Avoids precipitating tension pneumothorax and fatal cardiovascular collapse \\
 Acute Intracranial Hemorrhage (CT) & Suggests IV thrombolytic therapy (tPA) for acute focal neurological deficit & Detects hyperdense blood; hard contraindication suppresses tPA; activates neurosurgery & Avoids catastrophic hematoma expansion and fatal brain herniation \\
 \bottomrule
-\end{tabular}
+\end{tabular*}
 \label{tab:safety_matrix}
 \end{table*}
 
@@ -471,10 +473,13 @@ While MedAgentX advances safe multimodal decision support, several limitations w
 \end{enumerate}
 
 \section{Ethical Considerations \& Regulatory Alignment}
-MedAgentX is engineered as an assistive clinical copilot and does not exercise autonomous diagnostic or prescriptive authority. In compliance with HIPAA Safe Harbor regulations, all DICOM headers are stripped of direct patient identifiers prior to processing. Furthermore, following FDA Software as a Medical Device (SaMD) and IEC 62304 standards, the system incorporates mandatory clinician-in-the-loop audit gates for any critical pathology or safety abstention event.
+MedAgentX is engineered as an assistive clinical copilot and does not exercise autonomous diagnostic or prescriptive authority. In compliance with HIPAA Safe Harbor regulations (45 CFR \S 164.514(b) \cite{hipaa2002safeharbor}), all DICOM headers are stripped of direct patient identifiers prior to processing. Furthermore, following FDA Software as a Medical Device (SaMD) \cite{fda2017samd} and IEC 62304 \cite{iec62304} standards, the system incorporates mandatory clinician-in-the-loop audit gates for any critical pathology or safety abstention event.
 
 \section{Conclusion}
 MedAgentX addresses two persistent hazards in clinical AI: miscalibrated verbal confidence and dangerous fail-open perception fallbacks. Through pre-inference quality control, pluggable medical vision ensembles, Query-Evidence Relevance Gating ($S_{rel}$), and mathematically penalized composite confidence ($C_{total}$), MedAgentX delivers a calibrated, efficient, and fail-closed framework for clinician augmentation in critical care.
+
+\section*{Acknowledgment}
+The authors express their deepest gratitude to their project supervisor, Smt. G. Baby Lakshmi Prasanna, Assistant Professor, Department of Computer Science and Engineering (AI \& ML), Chaitanya Bharathi Institute of Technology (CBIT), Hyderabad, for her invaluable guidance, rigorous constructive feedback, and continuous intellectual support throughout the conception, architectural design, experimental evaluation, and manuscript preparation of Project MedAgentX. The authors also thank the faculty and administration of CBIT for providing academic facilities and computational infrastructure.
 
 \bibliographystyle{IEEEtran}
 \bibliography{references}
