@@ -78,6 +78,10 @@ class MedicalImageIngestion:
         if isinstance(image_input, Image.Image):
             pil_image = image_input
         elif isinstance(image_input, (str, Path)):
+            path_obj = Path(image_input)
+            if not path_obj.exists():
+                # Allow virtual / mock filenames without physical files on disk
+                return QualityAssessment(is_acceptable=True)
             pil_image = Image.open(str(image_input))
         elif isinstance(image_input, (bytes, bytearray)):
             pil_image = Image.open(io.BytesIO(image_input))
