@@ -207,6 +207,10 @@ class ReasonerAgent:
                 rec_lines.append("1. EMERGENT CODE STROKE ACTIVATION: Verify exact symptom onset window (< 4.5 hours for IV thrombolysis; < 24 hours for EVT).")
                 rec_lines.append("2. ENDOVASCULAR THROMBECTOMY (EVT): Perform emergent angiographic vessel assessment to identify large vessel occlusion (LVO).")
                 rec_lines.append("3. PERMISSIVE HYPERTENSION: Allow permissive hypertension (up to 220/120 mmHg if non-thrombolysis) to maintain penumbral perfusion.")
+            elif "pneumonia" in imp_lower or "consolidation" in imp_lower or "infiltrate" in imp_lower:
+                rec_lines.append("1. EMPIRIC ANTIMICROBIAL THERAPY (CAP): Initiate guideline-directed inpatient therapy for Community-Acquired Pneumonia (e.g., Ceftriaxone 1g IV daily + Azithromycin 500mg IV/PO daily, or respiratory fluoroquinolone monotherapy).")
+                rec_lines.append("2. MICROBIOLOGICAL WORKUP: Sputum Gram stain and culture, blood cultures x 2 sets, and urinary antigens for Streptococcus pneumoniae and Legionella.")
+                rec_lines.append("3. RESPIRATORY SUPPORT & PULMONARY TOILET: Supplemental oxygen to maintain SpO2 >= 92%, chest physiotherapy, and early mobilization.")
             elif "obstruction" in imp_lower:
                 rec_lines.append("1. GASTROINTESTINAL DECOMPRESSION: Place wide-bore nasogastric tube to low continuous suction; strict NPO status.")
                 rec_lines.append("2. ISOTONIC VOLUME EXPANSION: Aggressive IV balanced crystalloid resuscitation to correct third-space volume depletion.")
@@ -246,7 +250,7 @@ class ReasonerAgent:
         if detected_contradictions:
             for c in detected_contradictions:
                 safety_lines.append(f"⚠️ {c}")
-        elif safety_reason:
+        elif mode in ["SAFETY_CONSTRAINT", "HARD_ABSTENTION"] and safety_reason:
             safety_lines.append(f"⚠️ {safety_reason}")
 
         if imaging_analysis and imaging_analysis.contraindicated_interventions:
@@ -257,7 +261,7 @@ class ReasonerAgent:
         if getattr(patient, "allergies", []):
             safety_lines.append(f"⚠️ ALLERGY ALERT: Patient allergic to {', '.join(patient.allergies)}. All cross-reactive agents strictly contraindicated.")
 
-        safety_block = "\n".join([f"  {s}" for s in safety_lines]) if safety_lines else "  • No acute drug-vital contraindications detected under current presentation."
+        safety_block = "\n".join([f"  {s}" for s in safety_lines]) if safety_lines else "  • No acute pharmacological or physiological contraindications identified based on current clinical state."
 
         # 4. Monitoring Orders & Diagnostic Workup
         orders = [

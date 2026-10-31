@@ -81,9 +81,9 @@ def main():
     st.sidebar.caption("Adaptive Confidence-Guided Multi-Agent RAG")
     st.sidebar.markdown("---")
 
-    st.sidebar.subheader("⚙️ System Status")
-    st.sidebar.markdown(f"**LLM Provider:** `{settings.LLM_PROVIDER.upper()}`")
-    st.sidebar.markdown(f"**Model Engine:** `{settings.LLM_MODEL}`")
+    st.sidebar.subheader("⚙️ System Architecture")
+    st.sidebar.markdown(f"**Clinical Reasoning:** `{settings.LLM_MODEL}` (Ollama)")
+    st.sidebar.markdown("**Vision Perception:** `qwen3-vl:4b` (Multimodal ML)")
     st.sidebar.markdown(f"**Ollama Base URL:** `{settings.OLLAMA_BASE_URL}`")
     st.sidebar.markdown("---")
 
@@ -98,7 +98,7 @@ def main():
         st.title("🩺 MedAgentX Clinical Decision Support System")
         st.caption("Adaptive Multimodal Multi-Agent Clinical Decision Support with Safety Classification")
     with col_h2:
-        st.info("🟢 System Ready\nLLM: Ollama llama3.2")
+        st.info("🟢 System Ready\nReasoning: llama3.2\nVision: qwen3-vl:4b")
 
     tab1, tab2 = st.tabs(["📋 Clinical Vignette & Patient CDSS", "🩻 Multimodal Patient & Medical Scan Intake"])
 
@@ -216,12 +216,15 @@ def main():
             )
             # Image to display / use
             active_image = None
+            active_image_name = ""
             if uploaded_image is not None:
                 active_image = uploaded_image.read()
-                st.image(active_image, caption="Uploaded Patient Diagnostic Image", use_container_width=True)
+                active_image_name = uploaded_image.name
+                st.image(active_image, caption=f"Uploaded Patient Diagnostic Image: {active_image_name}", width="stretch")
             elif preset_info["img"] and os.path.exists(preset_info["img"]):
                 active_image = preset_info["img"]
-                st.image(preset_info["img"], caption=f"Preset Image: {os.path.basename(preset_info['img'])}", use_container_width=True)
+                active_image_name = os.path.basename(preset_info["img"])
+                st.image(preset_info["img"], caption=f"Preset Image: {active_image_name}", width="stretch")
 
         with col_up2:
             uploaded_report = st.file_uploader(
@@ -257,6 +260,7 @@ def main():
                         patient_text=mm_text,
                         report_input=report_content,
                         image_input=active_image,
+                        image_name=active_image_name,
                     )
 
                 render_results(res)

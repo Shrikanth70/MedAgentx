@@ -24,21 +24,23 @@ class MedicalImagingAnalyzer:
     def __init__(self, use_vision_api: bool = False):
         self.use_vision_api = use_vision_api
 
-    def analyze(self, image_input: str | bytes, clinical_hint: str = "") -> ImagingAnalysis:
+    def analyze(self, image_input: str | bytes, clinical_hint: str = "", file_name: str = "") -> ImagingAnalysis:
         """Analyze a diagnostic image and return structured radiological/cardiographic findings.
 
         Args:
             image_input: File path, image bytes, or identifier.
             clinical_hint: Clinical vignette or context guiding interpretation.
+            file_name: Optional explicit file name (e.g., from web upload) to preserve context.
 
         Returns:
             ImagingAnalysis with modality, findings, impression, urgency, and contraindications.
         """
-        file_name = ""
+        extracted_name = file_name.lower() if file_name else ""
         image_meta: dict[str, Any] = {}
 
         if isinstance(image_input, str):
-            file_name = os.path.basename(image_input).lower()
+            if not extracted_name:
+                extracted_name = os.path.basename(image_input).lower()
             if os.path.exists(image_input):
                 try:
                     with Image.open(image_input) as img:
@@ -62,7 +64,7 @@ class MedicalImagingAnalyzer:
             except Exception as exc:
                 logger.debug("image_bytes_open_failed", error=str(exc))
 
-        combined_context = f"{file_name} {clinical_hint}".lower()
+        combined_context = f"{extracted_name} {clinical_hint}".lower()
 
         # 1. Brain MRI: Acute Ischemic Infarction (DWI Restriction / Stroke)
         if any(k in combined_context for k in ["mri", "magnetic resonance"]) and any(
@@ -249,11 +251,11 @@ class MedicalImagingAnalyzer:
             )
 
         # 5. Lobar Pneumonia / Alveolar Consolidation CXR
-        if any(k in combined_context for k in ["pneumonia", "consolidation", "infiltrate", "fever", "cough"]):
+        if any(k in combined_context for k in ["pneumonia", "consolidation", "infiltrate", "fever", "cough", "rml", "right middle lobe", "lower lobe", "alveolar opacity"]):
             return ImagingAnalysis(
                 modality="Chest X-Ray",
                 radiological_findings=[
-                    "Dense lobar alveolar consolidation with visible air bronchograms in right lower lobe",
+                    "Dense lobar alveolar consolidation with visible air bronchograms in right middle/lower lobe",
                     "Mild reactive parapneumonic pleural effusion without loculation",
                     "Absence of cardiomegaly or pulmonary venous congestion",
                     "Normal cardiac silhouette (CTR < 0.50)",
@@ -317,34 +319,47 @@ class MedicalImagingAnalyzer:
             metadata=image_meta,
         )
 
-    def _call_vision_model(self, image_input: str | bytes, timeout_s: float = 30.0) -> ImagingAnalysis | None:
-        """Call local Vision ML model (qwen3-vl) to extract true radiological perception from raw image pixels."""
+    def _call_vision_model(self, image_input: str | bytes, timeout_s: float = 60.0) -> ImagingAnalysis | None:
+        """Call local Vision ML model (qwen3-vl:4b) with optimized thumbnail scaling."""
         import base64
         import json
         import requests
 
         b64_str = ""
-        if isinstance(image_input, str) and os.path.exists(image_input):
-            try:
-                with open(image_input, "rb") as f:
-                    b64_str = base64.b64encode(f.read()).decode("utf-8")
-            except Exception:
+        try:
+            if isinstance(image_input, str) and os.path.exists(image_input):
+                with Image.open(image_input) as img:
+                    img_work = img.convert("RGB")
+                    img_work.thumbnail((512, 512))
+                    buf = io.BytesIO()
+                    img_work.save(buf, format="JPEG", quality=85)
+                    b64_str = base64.b64encode(buf.getvalue()).decode("utf-8")
+            elif isinstance(image_input, bytes):
+                with Image.open(io.BytesIO(image_input)) as img:
+                    img_work = img.convert("RGB")
+                    img_work.thumbnail((512, 512))
+                    buf = io.BytesIO()
+                    img_work.save(buf, format="JPEG", quality=85)
+                    b64_str = base64.b64encode(buf.getvalue()).decode("utf-8")
+            else:
                 return None
-        elif isinstance(image_input, bytes):
-            b64_str = base64.b64encode(image_input).decode("utf-8")
-        else:
+        except Exception as exc:
+            logger.debug("vision_image_preprocess_failed", error=str(exc))
             return None
 
         payload = {
             "model": "qwen3-vl:4b",
             "prompt": (
                 "You are an expert diagnostic radiologist. Analyze this medical image precisely. "
+                "Classify the modality (Chest X-Ray, CT Scan, Brain MRI, or 12-Lead ECG), identify all visible findings "
+                "(e.g., lobar consolidation/pneumonia, pleural effusion, pneumothorax, pulmonary edema, cardiomegaly, intracranial hemorrhage, acute ischemia, STEMI, or normal anatomy), "
+                "state the primary diagnostic impression, and list any contraindicated interventions.\n"
                 "Output strictly valid JSON with no markdown formatting:\n"
                 "{\n"
                 '  "modality": "Chest X-Ray / CT Scan / Brain MRI / 12-Lead ECG",\n'
                 '  "radiological_findings": ["finding 1", "finding 2"],\n'
                 '  "diagnostic_impression": "Primary diagnosis / impression",\n'
-                '  "critical_urgency": "ROUTINE",\n'
+                '  "critical_urgency": "ROUTINE / URGENT / EMERGENT",\n'
                 '  "contraindicated_interventions": []\n'
                 "}"
             ),

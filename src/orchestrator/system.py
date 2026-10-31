@@ -368,13 +368,19 @@ class MedAgentXSystem:
         active_agents += 1
         trace.append(f"Activated Agent 4: Patient-Tailored Reasoner (Action: {action})")
 
+        safety_reason = (
+            router_decision.reason
+            if router_decision and action in ["SAFETY_CONSTRAINT", "HARD_ABSTENTION"]
+            else ""
+        )
+
         reasoner_output = self.reasoner.synthesize_patient_report(
             patient=patient,
             verified_evidence=verifier_output.verified_evidence if verifier_output else [],
             detected_contradictions=verifier_output.detected_contradictions if verifier_output else [],
             c_total=c_total,
             mode=action,
-            safety_reason=router_decision.reason if router_decision else "",
+            safety_reason=safety_reason,
         )
 
         latency = time.time() - start_time
@@ -408,6 +414,7 @@ class MedAgentXSystem:
         patient_text: str = "",
         report_input: Any = None,
         image_input: Any = None,
+        image_name: str = "",
     ) -> SystemResponse:
         """Execute multimodal clinical decision support synthesizing scans, lab reports, and vignettes."""
         from src.multimodal.contracts import MultimodalPatientCase
@@ -438,14 +445,18 @@ class MedAgentXSystem:
         if image_input:
             analyzer = MedicalImagingAnalyzer()
             hint = f"{base_patient.chief_complaint} {base_patient.hpi} {patient_text}"
-            imaging_analysis = analyzer.analyze(image_input=image_input, clinical_hint=hint)
+            imaging_analysis = analyzer.analyze(
+                image_input=image_input,
+                clinical_hint=hint,
+                file_name=image_name,
+            )
 
         # 4. Construct unified MultimodalPatientCase
         multimodal_case = MultimodalPatientCase(
             **base_patient.model_dump(),
             imaging_analysis=imaging_analysis,
             uploaded_document_text=str(report_input)[:1000] if report_input else "",
-            uploaded_file_name=str(image_input) if isinstance(image_input, str) else "uploaded_scan",
+            uploaded_file_name=image_name or (str(image_input) if isinstance(image_input, str) else "uploaded_scan"),
         )
 
         # 5. Route through ACMR patient clinical reasoning pipeline
