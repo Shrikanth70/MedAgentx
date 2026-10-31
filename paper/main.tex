@@ -15,12 +15,7 @@
 \usetikzlibrary{shapes.geometric,arrows.meta,positioning,calc,fit}
 \usepackage{hyperref}
 
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    citecolor=blue,
-    urlcolor=blue
-}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
 
 \begin{document}
 
@@ -109,35 +104,25 @@ Multi-Agent Debate \cite{du2024improving} & Text & None & Cross-Agent & Fixed Lo
     node distance=0.8cm and 1.2cm,
     box/.style={rectangle, draw=blue!70, fill=blue!5, rounded corners, thick, align=center, minimum width=2.4cm, minimum height=0.9cm, font=\footnotesize},
     agent/.style={rectangle, draw=purple!80, fill=purple!5, rounded corners, thick, align=center, minimum width=2.6cm, minimum height=1.0cm, font=\footnotesize},
-    decision/.style={diamond, draw=red!70, fill=red!5, thick, align=center, inner sep=1pt, font=\scriptsize, aspect=2},
     arrow/.style={-Latex, thick, draw=gray!80}
 ]
-    % Perception Tier
     \node[box] (input) {Raw Scan (DICOM/NIfTI/PNG)};
     \node[box, right=of input] (qc) {Ingestion QC \& PHI Scrub};
     \node[box, right=of qc] (vision) {Pluggable Vision Engine};
-    
-    % ACMR Orchestrator
     \node[agent, below=1.2cm of qc] (acmr) {\textbf{ACMR Orchestrator}\\State Machine \& Router};
-    
-    % Reasoning Tier Agents
-    \node[agent, left=1.2cm of acmr] (agent1) {\textbf{Agent 1: Planner}\\RadLex/SNOMED Mapping};
-    \node[agent, below=1.0cm of acmr] (agent2) {\textbf{Agent 2: Retriever}\\Vector + Graph Stores};
-    \node[agent, right=1.2cm of acmr] (agent3) {\textbf{Agent 3: Verifier}\\Consensus, $C_{total}$, ECE};
-    \node[box, below=1.0cm of agent2] (agent4) {\textbf{Agent 4: Reasoner}\\Radiology CDSS Report};
-
-    % Arrows
+    \node[agent, left=2.6cm of acmr] (agent1) {\textbf{Agent 1: Planner}\\RadLex/SNOMED Mapping};
+    \node[agent, below=1.0cm of agent1] (agent2) {\textbf{Agent 2: Retriever}\\Vector + Graph Stores};
+    \node[agent, right=2.6cm of acmr] (agent3) {\textbf{Agent 3: Verifier}\\Consensus, $C_{total}$, ECE};
+    \node[box, below=1.0cm of acmr] (agent4) {\textbf{Agent 4: Reasoner}\\Radiology CDSS Report};
     \draw[arrow] (input) -- (qc);
     \draw[arrow] (qc) -- node[above, font=\tiny] {Pass QC} (vision);
     \draw[arrow] (qc) |- node[left, font=\tiny] {Fail QC: Low\_Quality} (acmr);
     \draw[arrow] (vision) |- node[above, font=\tiny] {VisualFindings} (acmr);
     \draw[arrow] (acmr) -- (agent1);
-    \draw[arrow] (agent1) |- (agent2);
-    \draw[arrow] (agent2) -| (agent3);
+    \draw[arrow] (agent1) -- (agent2);
+    \draw[arrow] (agent2.south) -- ++(0,-0.6) -| (agent3.south);
     \draw[arrow] (agent3) -- node[right, font=\tiny] {$C_{total}, R_{contra}$} (acmr);
     \draw[arrow] (acmr) -- node[right, font=\tiny] {STOP\_CONFIDENT} (agent4);
-    
-    % Outlines for Tiers
     \node[draw=blue!40, dashed, inner sep=0.3cm, fit=(input) (qc) (vision), label={[text=blue!70, font=\bfseries\scriptsize]above:Tier 1: Multimodal Perception \& Ingestion Gate}] {};
     \node[draw=purple!40, dashed, inner sep=0.3cm, fit=(agent1) (acmr) (agent2) (agent3) (agent4), label={[text=purple!70, font=\bfseries\scriptsize]below:Tier 2: 4-Agent ACMR Adaptive Reasoning Engine}] {};
 \end{tikzpicture}%
@@ -240,42 +225,30 @@ The decision flow of the ACMR router is depicted in Fig.~\ref{fig:router_flow}, 
     arrow/.style={-Latex, thick, draw=gray!80}
 ]
     \node[block] (start) {Evaluate State $(C_{total}, V_{res})$};
-    
     \node[decision, below=0.5cm of start] (d1) {Required Img $\land$ Status $\neq$ OK?};
     \node[block, right=0.6cm of d1] (act1) {\textsc{Abstain-Insufficient-Evidence}};
-    
     \node[decision, below=0.5cm of d1] (d2) {Quality == Low\_Quality?};
     \node[block, right=0.6cm of d2] (act2) {\textsc{Request-More-Input}};
-
     \node[decision, below=0.5cm of d2] (d3) {Critical Pathology?};
     \node[block, right=0.6cm of d3] (act3) {\textsc{Escalate-To-Human}};
-
     \node[decision, below=0.5cm of d3] (d4) {$R_{contra} \ge 0.50 \lor$ Safety Alert?};
     \node[block, right=0.6cm of d4] (act4) {\textsc{Safety-Alert}};
-
     \node[decision, below=0.5cm of d4] (d5) {$C_{total} \ge \tau_{high} \land$ Status=OK?};
     \node[block, right=0.6cm of d5] (act5) {\textsc{Stop-Confident}};
-
     \node[decision, below=0.5cm of d5] (d6) {Overlap $\ge 0.85 \lor t \ge T_{max}$?};
     \node[block, right=0.6cm of d6] (act6) {\textsc{Stop-Saturated}};
     \node[block, below=0.5cm of d6] (act7) {\textsc{Retrieve-More} (Next Round)};
-
     \draw[arrow] (start) -- (d1);
     \draw[arrow] (d1) -- node[above, font=\tiny] {Yes} (act1);
     \draw[arrow] (d1) -- node[left, font=\tiny] {No} (d2);
-    
     \draw[arrow] (d2) -- node[above, font=\tiny] {Yes} (act2);
     \draw[arrow] (d2) -- node[left, font=\tiny] {No} (d3);
-
     \draw[arrow] (d3) -- node[above, font=\tiny] {Yes} (act3);
     \draw[arrow] (d3) -- node[left, font=\tiny] {No} (d4);
-
     \draw[arrow] (d4) -- node[above, font=\tiny] {Yes} (act4);
     \draw[arrow] (d4) -- node[left, font=\tiny] {No} (d5);
-
     \draw[arrow] (d5) -- node[above, font=\tiny] {Yes} (act5);
     \draw[arrow] (d5) -- node[left, font=\tiny] {No} (d6);
-
     \draw[arrow] (d6) -- node[above, font=\tiny] {Yes} (act6);
     \draw[arrow] (d6) -- node[left, font=\tiny] {No} (act7);
 \end{tikzpicture}%
@@ -420,7 +393,7 @@ MedAgentX demonstrates substantial improvements across diagnostic accuracy, conf
 \end{itemize}
 
 \subsection{Multimodal Radiology Evaluation (122 Clinical Cases)}
-On the curated 122-case multimodal imaging benchmark from the repository evaluation results (`vision\_cdss\_eval.json`), MedAgentX achieved:
+On the curated 122-case multimodal imaging benchmark from the repository evaluation results (\texttt{vision\_cdss\_eval.json}), MedAgentX achieved:
 \begin{itemize}
     \item \textbf{Overall Agreement:} 96.7\% diagnostic agreement (118/122 cases correctly routed and categorized: 98 \textsc{Stop-Confident}, 17 \textsc{Escalate-To-Human}, 6 \textsc{Stop-Saturated}, 1 \textsc{Request-More-Input}).
     \item \textbf{Pneumothorax Detection:} Sensitivity 2/2 (100.0\%, 95\% Wilson CI: [34.2\%, 100.0\%]); Specificity 116/120 (96.7\%, 95\% Wilson CI: [91.7\%, 98.7\%]).
