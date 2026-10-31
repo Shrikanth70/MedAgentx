@@ -75,18 +75,32 @@ class MedicalImageIngestion:
             QualityAssessment detailing diagnostic adequacy and any rejection reasons.
         """
         # Load image into PIL Image
-        if isinstance(image_input, Image.Image):
-            pil_image = image_input
-        elif isinstance(image_input, (str, Path)):
-            path_obj = Path(image_input)
-            if not path_obj.exists():
-                # Allow virtual / mock filenames without physical files on disk
-                return QualityAssessment(is_acceptable=True)
-            pil_image = Image.open(str(image_input))
-        elif isinstance(image_input, (bytes, bytearray)):
-            pil_image = Image.open(io.BytesIO(image_input))
-        else:
-            raise TypeError(f"Unsupported image input type: {type(image_input)}")
+        try:
+            if isinstance(image_input, Image.Image):
+                pil_image = image_input
+            elif isinstance(image_input, (str, Path)):
+                path_obj = Path(image_input)
+                if not path_obj.exists():
+                    # Allow virtual / mock filenames without physical files on disk
+                    return QualityAssessment(is_acceptable=True)
+                pil_image = Image.open(str(image_input))
+            elif isinstance(image_input, (bytes, bytearray)):
+                if len(image_input) == 0:
+                    return QualityAssessment(
+                        is_acceptable=False,
+                        rejection_reasons=["Empty (0 bytes) image payload. Re-acquisition required."],
+                    )
+                pil_image = Image.open(io.BytesIO(image_input))
+            else:
+                return QualityAssessment(
+                    is_acceptable=False,
+                    rejection_reasons=[f"Unsupported image input type: {type(image_input).__name__}"],
+                )
+        except Exception as e:
+            return QualityAssessment(
+                is_acceptable=False,
+                rejection_reasons=[f"Corrupt or unreadable image payload: {str(e)}"],
+            )
 
         rejection_reasons: list[str] = []
         is_acceptable = True

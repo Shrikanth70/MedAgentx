@@ -1,0 +1,235 @@
+{
+  "timestamp": "2026-10-31T13:56:13Z",
+  "summary": {
+    "fail_closed_compliance_rate_pct": 100.0,
+    "expected_calibration_error": 0.0378,
+    "hallucination_rate_pct": 0.0,
+    "total_studies_evaluated": 122,
+    "total_stress_cases_evaluated": 16
+  },
+  "pathology_metrics": {
+    "Pneumothorax": {
+      "TP": 2,
+      "FP": 4,
+      "TN": 116,
+      "FN": 0,
+      "sensitivity_pct": 100.0,
+      "specificity_pct": 96.67
+    },
+    "Hemorrhage": {
+      "TP": 2,
+      "FP": 4,
+      "TN": 116,
+      "FN": 0,
+      "sensitivity_pct": 100.0,
+      "specificity_pct": 96.67
+    },
+    "Pneumonia": {
+      "TP": 1,
+      "FP": 1,
+      "TN": 120,
+      "FN": 0,
+      "sensitivity_pct": 100.0,
+      "specificity_pct": 99.17
+    }
+  },
+  "route_decisions": {
+    "STOP_CONFIDENT": 98,
+    "ESCALATE_TO_HUMAN": 17,
+    "STOP_SATURATED": 6,
+    "REQUEST_MORE_INPUT": 1
+  },
+  "modality_breakdown": {
+    "Chest X-Ray (CXR)": 45,
+    "CT Scan (Head / Chest / Abdomen)": 65,
+    "Brain / Spine MRI": 11,
+    "12-Lead ECG": 1
+  },
+  "fail_closed_compliance": {
+    "total_stress_cases": 16,
+    "passed_stress_cases": 16,
+    "compliance_rate_pct": 100.0,
+    "detailed_results": [
+      {
+        "case": "Simulated Timeout 1",
+        "condition": "TIMEOUT",
+        "route_decision": "ABSTAIN_INSUFFICIENT_EVIDENCE",
+        "vision_status": "TIMEOUT",
+        "confidence": 0.0,
+        "compliant": true
+      },
+      {
+        "case": "Simulated Timeout 2",
+        "condition": "TIMEOUT",
+        "route_decision": "ABSTAIN_INSUFFICIENT_EVIDENCE",
+        "vision_status": "TIMEOUT",
+        "confidence": 0.555,
+        "compliant": true
+      },
+      {
+        "case": "Simulated Timeout 3",
+        "condition": "TIMEOUT",
+        "route_decision": "ABSTAIN_INSUFFICIENT_EVIDENCE",
+        "vision_status": "TIMEOUT",
+        "confidence": 0.0,
+        "compliant": true
+      },
+      {
+        "case": "Simulated Timeout 4",
+        "condition": "TIMEOUT",
+        "route_decision": "ABSTAIN_INSUFFICIENT_EVIDENCE",
+        "vision_status": "TIMEOUT",
+        "confidence": 0.0,
+        "compliant": true
+      },
+      {
+        "case": "Simulated Timeout 5",
+        "condition": "TIMEOUT",
+        "route_decision": "ABSTAIN_INSUFFICIENT_EVIDENCE",
+        "vision_status": "TIMEOUT",
+        "confidence": 0.0,
+        "compliant": true
+      },
+      {
+        "case": "Low Resolution (64x64)",
+        "condition": "LOW_QUALITY",
+        "route_decision": "REQUEST_MORE_INPUT",
+        "vision_status": "LOW_QUALITY",
+        "confidence": 0.555,
+        "compliant": true
+      },
+      {
+        "case": "Low Resolution (128x128)",
+        "condition": "LOW_QUALITY",
+        "route_decision": "REQUEST_MORE_INPUT",
+        "vision_status": "LOW_QUALITY",
+        "confidence": 0.555,
+        "compliant": true
+      },
+      {
+        "case": "Low Resolution (200x200)",
+        "condition": "LOW_QUALITY",
+        "route_decision": "REQUEST_MORE_INPUT",
+        "vision_status": "LOW_QUALITY",
+        "confidence": 0.555,
+        "compliant": true
+      },
+      {
+        "case": "Pitch Black Underexposed (300x300)",
+        "condition": "LOW_QUALITY",
+        "route_decision": "REQUEST_MORE_INPUT",
+        "vision_status": "LOW_QUALITY",
+        "confidence": 0.655,
+        "compliant": true
+      },
+      {
+        "case": "Pitch Black Underexposed (512x512)",
+        "condition": "LOW_QUALITY",
+        "route_decision": "REQUEST_MORE_INPUT",
+        "vision_status": "LOW_QUALITY",
+        "confidence": 0.655,
+        "compliant": true
+      },
+      {
+        "case": "Overexposed Blown-Out (300x300)",
+        "condition": "LOW_QUALITY",
+        "route_decision": "REQUEST_MORE_INPUT",
+        "vision_status": "LOW_QUALITY",
+        "confidence": 0.655,
+        "compliant": true
+      },
+      {
+        "case": "Overexposed Blown-Out (512x512)",
+        "condition": "LOW_QUALITY",
+        "route_decision": "REQUEST_MORE_INPUT",
+        "vision_status": "LOW_QUALITY",
+        "confidence": 0.655,
+        "compliant": true
+      },
+      {
+        "case": "Motion Blur Artifact (300x300)",
+        "condition": "LOW_QUALITY",
+        "route_decision": "REQUEST_MORE_INPUT",
+        "vision_status": "LOW_QUALITY",
+        "confidence": 0.655,
+        "compliant": true
+      },
+      {
+        "case": "Motion Blur Artifact (512x512)",
+        "condition": "LOW_QUALITY",
+        "route_decision": "REQUEST_MORE_INPUT",
+        "vision_status": "LOW_QUALITY",
+        "confidence": 0.655,
+        "compliant": true
+      },
+      {
+        "case": "Corrupt Binary Header",
+        "condition": "CORRUPT_BYTES",
+        "route_decision": "REQUEST_MORE_INPUT",
+        "vision_status": "LOW_QUALITY",
+        "confidence": 0.655,
+        "compliant": true
+      },
+      {
+        "case": "Empty Image Payload",
+        "condition": "CORRUPT_BYTES",
+        "route_decision": "REQUEST_MORE_INPUT",
+        "vision_status": "LOW_QUALITY",
+        "confidence": 0.655,
+        "compliant": true
+      }
+    ]
+  },
+  "sample_cohort_studies": [
+    {
+      "study_id": "IMG-001",
+      "file_name": "xray_img_1.jpg",
+      "category": "Lobar Pneumonia / Alveolar Consolidation",
+      "modality": "Chest X-Ray (CXR)",
+      "route_decision": "STOP_CONFIDENT",
+      "confidence": 0.8975,
+      "findings_count": 1,
+      "citations_count": 2
+    },
+    {
+      "study_id": "IMG-002",
+      "file_name": "xray_img_10.jpg",
+      "category": "Thoracic Radiography",
+      "modality": "Chest X-Ray (CXR)",
+      "route_decision": "STOP_CONFIDENT",
+      "confidence": 0.805,
+      "findings_count": 0,
+      "citations_count": 1
+    },
+    {
+      "study_id": "IMG-003",
+      "file_name": "ct_img_107.jpg",
+      "category": "Computed Tomography Diagnostic Scan",
+      "modality": "CT Scan (Head / Chest / Abdomen)",
+      "route_decision": "STOP_CONFIDENT",
+      "confidence": 0.805,
+      "findings_count": 0,
+      "citations_count": 1
+    },
+    {
+      "study_id": "IMG-004",
+      "file_name": "ct_img_108.jpg",
+      "category": "Computed Tomography Diagnostic Scan",
+      "modality": "CT Scan (Head / Chest / Abdomen)",
+      "route_decision": "STOP_CONFIDENT",
+      "confidence": 0.805,
+      "findings_count": 0,
+      "citations_count": 1
+    },
+    {
+      "study_id": "IMG-005",
+      "file_name": "xray_img_109.jpg",
+      "category": "Thoracic Radiography",
+      "modality": "Chest X-Ray (CXR)",
+      "route_decision": "STOP_CONFIDENT",
+      "confidence": 0.805,
+      "findings_count": 0,
+      "citations_count": 1
+    }
+  ]
+}

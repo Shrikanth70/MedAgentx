@@ -501,7 +501,7 @@ class ReasonerAgent:
 
         # Findings extraction
         findings_payload: list[dict[str, Any]] = []
-        if vision_result and vision_result.findings:
+        if vision_result is not None:
             for f in vision_result.findings:
                 findings_payload.append({
                     "finding_id": f.finding_id,
@@ -522,9 +522,12 @@ class ReasonerAgent:
                     in_findings = True
                     continue
                 if in_findings:
-                    if line.strip().startswith("•") or line.strip().startswith("-"):
-                        findings_payload.append({"finding": line.strip()})
-                    elif line.strip().startswith("V. ") or line.strip().startswith("DECISION"):
+                    cleaned_line = line.strip()
+                    if cleaned_line.startswith("•") or cleaned_line.startswith("-"):
+                        content = cleaned_line.lstrip("•- ").strip()
+                        if not content.lower().startswith("none"):
+                            findings_payload.append({"finding": cleaned_line})
+                    elif cleaned_line.startswith("V. ") or cleaned_line.startswith("DECISION") or cleaned_line.startswith("VII."):
                         break
 
         data = {

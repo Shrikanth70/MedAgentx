@@ -452,7 +452,11 @@ class MedAgentXSystem:
                     setattr(base_patient, lab_key, val)
 
         # 3. Analyze medical imaging scans (Chest X-Rays, 12-lead ECGs, CTs)
-        if image_input:
+        has_image = (
+            image_input is not None
+            and (not isinstance(image_input, str) or image_input.strip() != "")
+        )
+        if has_image:
             analyzer = MedicalImagingAnalyzer()
             hint = f"{base_patient.chief_complaint} {base_patient.hpi} {patient_text}".strip()
             vision_result = analyzer.analyze_vision(
