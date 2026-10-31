@@ -50,3 +50,4 @@ We enforce a strict **Fail-Closed Medical Imaging Architecture**:
 - **Positive:** Expected Calibration Error (ECE) reduced from 0.0520 to **0.0378**.
 - **Negative:** Increased initial ingestion and inference latency when secondary retries are triggered.
 - **Verification:** Pinned by dedicated regression test `test_regression_fail_open_vision_timeout_never_recurs` and benchmark runner `scripts/eval_vision_cdss.py`.
+
