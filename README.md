@@ -315,10 +315,10 @@ MedAgentx/
 This research project is developed at **Chaitanya Bharathi Institute of Technology (CBIT)**, Hyderabad, India:
 
 - **Student Researchers**:
-  - **Bhukya Srikanth** — Department of CSE (AI & ML), CBIT, Hyderabad (`srikanth.cseaiml@cbit.ac.in`)
-  - **Banoth Elisharaj** — Department of CSE (AI & ML), CBIT, Hyderabad (`elisharaj.cseaiml@cbit.ac.in`)
+  - **Bhukya Srikanth** — Department of CSE (AI & ML), CBIT, Hyderabad 
+  - **Banoth Elisharaj** — Department of CSE (AI & ML), CBIT, Hyderabad 
 - **Faculty Supervisor & Project Guide**:
-  - **Smt. G. Baby Lakshmi Prasanna** — Assistant Professor, Department of CSE (AI & ML), CBIT, Hyderabad (`glakshmiprasanna_cseaiml@cbit.ac.in`)
+  - **Smt. G. Baby Lakshmi Prasanna** — Assistant Professor, Department of CSE (AI & ML), CBIT, Hyderabad 
 
 ---
 
