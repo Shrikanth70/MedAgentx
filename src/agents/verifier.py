@@ -173,7 +173,7 @@ class VerifierAgent:
         if ("contraindicated" in full_text or "contraindication" in full_text or "do not" in full_text) and (
             ("nitroglycerin" in q_lower and "right ventricular" in q_lower) or
             ("prasugrel" in q_lower and "stroke" in q_lower) or
-            ("nitrates" in full_text and "preload" in full_text)
+            (("nitrates" in q_lower or "nitroglycerin" in q_lower) and ("preload" in full_text or "right ventricular" in full_text))
         ):
             msg = f"CLINICAL CONTRAINDICATION DETECTED: {intervention} is strictly contraindicated in {clinical_context}."
             detected_contradictions.append(msg)

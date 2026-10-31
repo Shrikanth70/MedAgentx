@@ -210,8 +210,8 @@ def main():
         col_up1, col_up2 = st.columns(2)
         with col_up1:
             uploaded_image = st.file_uploader(
-                "📷 Upload Medical Diagnostic Image (CXR, ECG, CT)",
-                type=["png", "jpg", "jpeg"],
+                "📷 Upload Medical Diagnostic Image (CXR, ECG, CT, DICOM)",
+                type=["png", "jpg", "jpeg", "dcm", "dicom"],
                 key="img_uploader",
             )
             # Image to display / use
@@ -280,8 +280,14 @@ def render_results(res):
     safety_signal = res.metadata.get("safety_signal", False)
     evidence_conflict = res.metadata.get("evidence_conflict", False)
 
-    # Safety Classification Banner (before metrics)
-    if route_decision == "SAFETY_CONSTRAINT":
+    # Action Banners
+    if route_decision == "ABSTAIN_INSUFFICIENT_EVIDENCE":
+        st.error("🛑 FAIL-CLOSED SAFETY OVERRIDE: Automated diagnosis withheld due to unverified imaging. Manual radiologist re-evaluation required.")
+    elif route_decision == "ESCALATE_TO_HUMAN":
+        st.error("🚨 CRITICAL PATHOLOGY DETECTED: Emergent physician evaluation required.")
+    elif route_decision == "REQUEST_MORE_INPUT":
+        st.warning("⚠️ RE-ACQUISITION REQUIRED: Image rejected due to quality limitations.")
+    elif route_decision == "SAFETY_CONSTRAINT":
         st.markdown(
             '<div class="safety-constraint-banner">'
             '⚠️ CLINICAL SAFETY CONSTRAINT — The requested intervention is contraindicated in the specified clinical context. '
@@ -303,6 +309,21 @@ def render_results(res):
                 'MedAgentX abstains from generating clinical recommendations.</div>',
                 unsafe_allow_html=True,
             )
+
+    # Vision Perception Status Indicator
+    vision_status = res.metadata.get("vision_status")
+    if vision_status:
+        if vision_status == "OK":
+            st.success("🟢 Vision Perception: OK (Evidence Grounded)")
+        elif vision_status == "TIMEOUT":
+            st.error("🔴 Vision Perception: TIMEOUT (Fail-Closed)")
+        elif vision_status == "LOW_QUALITY":
+            quality_meta = res.metadata.get("quality") or {}
+            rejection_reasons = quality_meta.get("rejection_reasons", []) if isinstance(quality_meta, dict) else []
+            reasons_str = ", ".join(rejection_reasons) if rejection_reasons else "suboptimal study"
+            st.warning(f"🟠 Vision Perception: LOW_QUALITY ({reasons_str})")
+        else:
+            st.info(f"⚪ Vision Perception: {vision_status}")
 
     # Metrics Row 1: Confidence & Routing
     st.subheader("📊 Composite Evidence Confidence & Routing Metrics")
@@ -345,6 +366,86 @@ def render_results(res):
     # Final Report
     st.subheader("📄 Clinical Decision Support Report")
     st.text_area("Generated Output:", value=res.answer, height=360)
+
+    # Detailed Visual Findings with Evidence Landmarks & Bounding Boxes
+    vr = res.metadata.get("vision_result")
+    if isinstance(vr, dict) and vr.get("findings"):
+        with st.expander("🔍 Detailed Grounded Findings & Visual Landmarks", expanded=True):
+            for f in vr["findings"]:
+                crit_pill = "🚨 [CRITICAL ALERT] " if f.get("is_critical") else ""
+                prob_pct = f.get("probability", 1.0) * 100
+                st.markdown(
+                    f"- **{crit_pill}{f.get('label')}** ({f.get('anatomical_location', 'Anatomy')}) "
+                    f"— Calibrated Probability: `{prob_pct:.1f}%`"
+                )
+                ev = f.get("evidence")
+                if ev and isinstance(ev, dict):
+                    if ev.get("supporting_visual_description"):
+                        st.caption(f"  *Visual Landmark:* {ev['supporting_visual_description']}")
+                    if ev.get("bbox"):
+                        st.caption(f"  *Bounding Box Coordinates:* `{ev['bbox']}`")
+                    if ev.get("heatmap_path"):
+                        st.caption(f"  *Grad-CAM Overlay:* `{ev['heatmap_path']}`")
+
+    # Download Buttons for Multi-Format Structured Report Exporters
+    st.subheader("💾 Export Clinical Decision Support Report")
+    json_data = res.metadata.get("json_report")
+    html_data = res.metadata.get("html_report")
+
+    if not json_data:
+        import json
+        json_data = json.dumps(
+            {
+                "query": res.query,
+                "answer": res.answer,
+                "confidence": res.confidence,
+                "route_decision": route_decision,
+                "metadata": {
+                    k: v
+                    for k, v in res.metadata.items()
+                    if k not in ["json_report", "html_report"]
+                },
+            },
+            indent=2,
+        )
+
+    if not html_data:
+        html_data = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>MedAgentX Clinical Report</title>
+    <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; padding: 2rem; }}
+        .card {{ background: #1e293b; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; border: 1px solid #334155; }}
+        pre {{ white-space: pre-wrap; word-wrap: break-word; font-size: 0.95rem; line-height: 1.5; }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>MedAgentX Clinical Report</h2>
+        <pre>{res.answer}</pre>
+    </div>
+</body>
+</html>"""
+
+    dl_col1, dl_col2 = st.columns(2)
+    with dl_col1:
+        st.download_button(
+            label="📥 Export Report JSON",
+            data=json_data,
+            file_name="medagentx_report.json",
+            mime="application/json",
+            key=f"dl_json_{abs(hash(res.answer[:30]))}",
+        )
+    with dl_col2:
+        st.download_button(
+            label="🌐 Export Report HTML",
+            data=html_data,
+            file_name="medagentx_report.html",
+            mime="text/html",
+            key=f"dl_html_{abs(hash(res.answer[:30]))}",
+        )
 
 
 

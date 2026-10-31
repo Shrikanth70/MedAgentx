@@ -115,21 +115,31 @@ class MedicalImagingAnalyzer:
             "file_name": extracted_name,
         }
         vision_result = self.vision_engine.analyze(image_input, metadata=metadata)
+        return self.map_vision_result(vision_result)
 
-        # Step 3: Handle the resulting VisionResult
+    def map_vision_result(self, vision_result: VisionResult) -> ImagingAnalysis:
+        """Map a VisionResult contract to an ImagingAnalysis instance."""
+        # Handle non-OK VisionResult
         if vision_result.status != VisionStatus.OK:
             logger.warning("vision_perception_incomplete", status=vision_result.status.value)
+            status_str = vision_result.status.value if hasattr(vision_result.status, "value") else str(vision_result.status)
+            if vision_result.status == VisionStatus.LOW_QUALITY:
+                reasons = vision_result.quality.rejection_reasons if vision_result.quality else []
+                impression = f"Suboptimal Study: {', '.join(reasons)}" if reasons else "Suboptimal Study"
+            else:
+                impression = f"Imaging Perception Incomplete ({status_str})"
             return ImagingAnalysis(
                 modality=vision_result.modality or "Diagnostic Imaging",
                 radiological_findings=[],
-                diagnostic_impression=f"Imaging Perception Incomplete ({vision_result.status.value})",
+                diagnostic_impression=impression,
                 critical_urgency="ROUTINE",
                 confidence=0.0,
                 contraindicated_interventions=[],
                 metadata={
-                    "vision_status": vision_result.status.value,
+                    "vision_status": status_str,
                     "vision_result": vision_result.model_dump(),
                     "trace_id": vision_result.trace_id,
+                    "quality_assessment": vision_result.quality.model_dump() if vision_result.quality else None,
                 },
             )
 

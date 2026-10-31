@@ -67,7 +67,7 @@ def test_cross_modal_acmr_safety_and_reasoning():
         image_input="sample_cxr_pneumothorax.png",
     )
     assert res.system_id == "PROPOSED_MEDAGENTX"
-    assert res.metadata.get("route_decision") in ["SAFETY_CONSTRAINT", "HARD_ABSTENTION"]
+    assert res.metadata.get("route_decision") in ["SAFETY_CONSTRAINT", "HARD_ABSTENTION", "ESCALATE_TO_HUMAN"]
     assert "PNEUMOTHORAX" in res.answer.upper() or "CHEST TUBE" in res.answer.upper()
     assert "POSITIVE PRESSURE" in res.answer.upper() or "VENTILATION" in res.answer.upper()
 
@@ -108,7 +108,7 @@ def test_cross_modal_head_ct_hemorrhage_contraindication():
         image_input="head_ct_acute_hemorrhage.png",
     )
     assert res.system_id == "PROPOSED_MEDAGENTX"
-    assert res.metadata.get("route_decision") in ["SAFETY_CONSTRAINT", "HARD_ABSTENTION"]
+    assert res.metadata.get("route_decision") in ["SAFETY_CONSTRAINT", "HARD_ABSTENTION", "ESCALATE_TO_HUMAN"]
     assert "HEMORRHAGE" in res.answer.upper()
     assert "THROMBOLYTIC" in res.answer.upper() or "ALTEPLASE" in res.answer.upper() or "CONTRAINDICATED" in res.answer.upper()
 

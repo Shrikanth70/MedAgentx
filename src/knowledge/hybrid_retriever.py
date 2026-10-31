@@ -51,8 +51,12 @@ class HybridRetriever:
 
             score = 0.0
 
-            # Direct key clinical concept boosts (skip common conversational words)
-            stopwords = {"a", "an", "the", "in", "on", "at", "to", "for", "of", "with", "and", "or", "by", "is", "are", "was", "were", "it", "from", "as", "day", "days", "year", "years", "old", "male", "female", "history"}
+            # Direct key clinical concept boosts (skip common conversational words and generic directional terms)
+            stopwords = {
+                "a", "an", "the", "in", "on", "at", "to", "for", "of", "with", "and", "or", "by", "is", "are", "was", "were",
+                "it", "from", "as", "day", "days", "year", "years", "old", "male", "female", "history",
+                "right", "left", "bilateral", "unspecified", "clinical", "management", "guideline", "guidelines"
+            }
             for token in query_tokens:
                 if token in stopwords:
                     continue
@@ -81,6 +85,10 @@ class HybridRetriever:
             for phrase, weight in key_phrases:
                 if phrase in q_lower and (phrase in topic or phrase in category or phrase in content):
                     score += weight
+
+            # Clinical finding to guideline mappings (e.g. CXR consolidation -> Pneumonia/CAP guidelines)
+            if "consolidation" in q_lower and ("pneumonia" in topic or "pneumonia" in category or "pneumonia" in content or "cap" in topic or "cap" in category):
+                score += 30.0
 
             scored_chunks.append((score, doc))
 

@@ -383,6 +383,15 @@ class MedAgentXSystem:
             safety_reason=safety_reason,
         )
 
+        json_report = self.reasoner.export_report_json(
+            patient=patient,
+            reasoner_output=reasoner_output,
+        )
+        html_report = self.reasoner.export_report_html(
+            patient=patient,
+            reasoner_output=reasoner_output,
+        )
+
         latency = time.time() - start_time
         token_count = len(patient.summarize_clinical_state().split()) + len(reasoner_output.clinical_report.split())
 
@@ -406,6 +415,8 @@ class MedAgentXSystem:
                 "contradiction_type": verifier_output.contradiction_type if verifier_output else "NONE",
                 "safety_severity": verifier_output.safety_severity if verifier_output else "NONE",
                 "router_reason": router_decision.reason if router_decision else "",
+                "json_report": json_report,
+                "html_report": html_report,
             },
         )
 
@@ -441,15 +452,39 @@ class MedAgentXSystem:
                     setattr(base_patient, lab_key, val)
 
         # 3. Analyze medical imaging scans (Chest X-Rays, 12-lead ECGs, CTs)
-        imaging_analysis = None
         if image_input:
             analyzer = MedicalImagingAnalyzer()
-            hint = f"{base_patient.chief_complaint} {base_patient.hpi} {patient_text}"
-            imaging_analysis = analyzer.analyze(
+            hint = f"{base_patient.chief_complaint} {base_patient.hpi} {patient_text}".strip()
+            vision_result = analyzer.analyze_vision(
                 image_input=image_input,
                 clinical_hint=hint,
                 file_name=image_name,
             )
+            imaging_analysis = analyzer.map_vision_result(vision_result)
+
+            visual_findings = vision_result.findings
+            vision_status = (
+                vision_result.status.value
+                if hasattr(vision_result.status, "value")
+                else str(vision_result.status)
+            )
+            vision_uncertainty = max([f.uncertainty for f in visual_findings], default=0.0)
+            requires_imaging = True
+            is_critical_pathology = any(f.is_critical for f in visual_findings)
+            quality_rejection_reasons = (
+                vision_result.quality.rejection_reasons
+                if (vision_result.quality and vision_result.quality.rejection_reasons)
+                else []
+            )
+        else:
+            vision_result = None
+            imaging_analysis = None
+            visual_findings = None
+            vision_status = "OK"
+            vision_uncertainty = 0.0
+            requires_imaging = False
+            is_critical_pathology = False
+            quality_rejection_reasons = []
 
         # 4. Construct unified MultimodalPatientCase
         multimodal_case = MultimodalPatientCase(
@@ -459,10 +494,206 @@ class MedAgentXSystem:
             uploaded_file_name=image_name or (str(image_input) if isinstance(image_input, str) else "uploaded_scan"),
         )
 
-        # 5. Route through ACMR patient clinical reasoning pipeline
-        res = self.query_patient(multimodal_case)
+        start_time = time.time()
+        trace = []
+        active_agents = 0
 
-        # 6. Inject multimodal metadata for API and Streamlit UI consumption
+        # Step 1: Agent 1 (Planner for Patient)
+        plan = self.planner.plan_patient(multimodal_case)
+        active_agents += 1
+        trace.append(f"Activated Agent 1: Clinical Vignette Planner for Patient {getattr(base_patient, 'patient_id', 'PT-MM-01')}")
+
+        iteration = 0
+        c_total = 0.0
+        delta_c = 0.0
+        prev_c = 0.0
+        current_query = plan.original_query
+        action = "RE_RETRIEVE"
+        verifier_output = None
+        router_decision = None
+        previous_chunks: list[dict[str, Any]] = []
+        previous_document_ids: set[str] = set()
+
+        while iteration <= settings.MAX_RETRIEVAL_ITERATIONS and action in [
+            "RE_RETRIEVE",
+            "TARGETED_RE_RETRIEVE",
+            "QUERY_REWRITE_RE_RETRIEVE",
+            "RESOLVE_CONTRADICTION",
+        ]:
+            # Step B: Agent 2 (Retriever)
+            retrieval_res = self.retriever.retrieve(
+                query_text=current_query,
+                entities=plan.extracted_entities,
+                visual_findings=visual_findings,
+                patient_context=multimodal_case,
+                modality=imaging_analysis.modality if imaging_analysis else "",
+            )
+            active_agents += 1
+            curr_chunks = retrieval_res.vector_evidence
+            curr_chunk_ids = {c.get("chunk_id", f"chunk_{idx}") for idx, c in enumerate(curr_chunks)}
+
+            if previous_document_ids:
+                overlap_count = len(curr_chunk_ids & previous_document_ids)
+                evidence_overlap = round(overlap_count / max(1, len(curr_chunk_ids)), 4)
+            else:
+                evidence_overlap = 0.0
+
+            # Step C: Agent 3 (Verifier with Patient Vital & Lab Safety Guard)
+            verifier_output = self.verifier.verify(
+                query_text=current_query,
+                vector_evidence=curr_chunks,
+                graph_evidence=retrieval_res.graph_evidence,
+                previous_chunks=previous_chunks,
+                visual_findings=visual_findings,
+                vision_result=vision_result,
+                patient=base_patient,
+            )
+            active_agents += 1
+
+            # Step D: Composite Confidence Calculation
+            c_total = ConfidenceCalculator.calculate_composite_confidence(
+                s_vec=retrieval_res.s_vec,
+                s_graph=retrieval_res.s_graph,
+                v_agree=verifier_output.v_agree,
+                r_contra=verifier_output.r_contra,
+                s_rel=verifier_output.s_rel,
+                completeness=verifier_output.evidence_completeness,
+                novelty=verifier_output.evidence_novelty,
+                contradiction_type=verifier_output.contradiction_type,
+                vision_status=vision_status,
+                vision_uncertainty=vision_uncertainty,
+                evidence_count=retrieval_res.evidence_count,
+            )
+
+            if iteration > 0:
+                delta_c = round(c_total - prev_c, 4)
+            else:
+                delta_c = 0.0
+
+            # Step E: ACMR Dynamic Router
+            effective_critical = (
+                (verifier_output.is_critical_pathology if verifier_output else False)
+                or is_critical_pathology
+            )
+            router_decision = self.router.route_explainable(
+                c_total=c_total,
+                delta_c=delta_c,
+                retrieval_gap=verifier_output.retrieval_gap,
+                missing_evidence=verifier_output.missing_evidence,
+                s_rel=verifier_output.s_rel,
+                r_contra=verifier_output.r_contra,
+                contradiction_type=verifier_output.contradiction_type,
+                safety_severity=verifier_output.safety_severity,
+                evidence_novelty=verifier_output.evidence_novelty,
+                evidence_overlap=evidence_overlap,
+                iteration=iteration,
+                vision_status=vision_status,
+                requires_imaging=requires_imaging,
+                is_critical_pathology=effective_critical,
+                quality_rejection_reasons=quality_rejection_reasons,
+                evidence_count=retrieval_res.evidence_count,
+            )
+            action = router_decision.action
+            trace.append(f"Iteration {iteration} -> {action}: {router_decision.reason}")
+
+            previous_chunks.extend(curr_chunks)
+            previous_document_ids.update(curr_chunk_ids)
+            prev_c = c_total
+
+            if action in [
+                "STOP_CONFIDENT",
+                "STOP_SATURATED",
+                "STOP_MAX_ITERATIONS",
+                "SAFETY_CONSTRAINT",
+                "HARD_ABSTENTION",
+                "ABSTAIN_INSUFFICIENT_EVIDENCE",
+                "ESCALATE_TO_HUMAN",
+                "REQUEST_MORE_INPUT",
+            ]:
+                break
+
+            iteration += 1
+
+        # Step F: Agent 4 (Reasoner with Tailored Patient Synthesis)
+        active_agents += 1
+        trace.append(f"Activated Agent 4: Patient-Tailored Reasoner (Action: {action})")
+
+        safety_reason = (
+            router_decision.reason
+            if router_decision and action in [
+                "SAFETY_CONSTRAINT",
+                "HARD_ABSTENTION",
+                "ABSTAIN_INSUFFICIENT_EVIDENCE",
+                "ESCALATE_TO_HUMAN",
+                "REQUEST_MORE_INPUT",
+            ]
+            else ""
+        )
+
+        reasoner_output = self.reasoner.synthesize_patient_report(
+            patient=multimodal_case,
+            verified_evidence=verifier_output.verified_evidence if verifier_output else [],
+            detected_contradictions=verifier_output.detected_contradictions if verifier_output else [],
+            c_total=c_total,
+            mode=action,
+            safety_reason=safety_reason,
+            vision_result=vision_result,
+            visual_findings=visual_findings,
+            critical_alerts=verifier_output.critical_alerts if verifier_output else [],
+            cross_modal_contradictions=verifier_output.cross_modal_contradictions if verifier_output else [],
+        )
+
+        json_report = self.reasoner.export_report_json(
+            patient=multimodal_case,
+            reasoner_output=reasoner_output,
+            vision_result=vision_result,
+        )
+        html_report = self.reasoner.export_report_html(
+            patient=multimodal_case,
+            reasoner_output=reasoner_output,
+            vision_result=vision_result,
+        )
+
+        latency = time.time() - start_time
+        token_count = len(multimodal_case.summarize_clinical_state().split()) + len(reasoner_output.clinical_report.split())
+
+        res = SystemResponse(
+            system_id=self.system_id,
+            query=getattr(base_patient, "chief_complaint", "") or current_query,
+            answer=reasoner_output.clinical_report,
+            evidence_chunks=verifier_output.verified_evidence if verifier_output else [],
+            citations=reasoner_output.citations,
+            confidence=c_total,
+            latency_seconds=round(latency, 4),
+            token_count=token_count,
+            metadata={
+                "c_total": c_total,
+                "delta_c": delta_c,
+                "retrieval_rounds": iteration,
+                "route_decision": action,
+                "active_agent_count": active_agents,
+                "trace": trace,
+                "s_rel": verifier_output.s_rel if verifier_output else 0.0,
+                "contradiction_type": verifier_output.contradiction_type if verifier_output else "NONE",
+                "safety_severity": verifier_output.safety_severity if verifier_output else "NONE",
+                "router_reason": router_decision.reason if router_decision else "",
+                "evidence_overlap": evidence_overlap,
+                "evidence_novelty": verifier_output.evidence_novelty if verifier_output else 1.0,
+                "retrieval_gap": verifier_output.retrieval_gap if verifier_output else "NONE",
+                "missing_evidence": verifier_output.missing_evidence if verifier_output else [],
+                "safety_signal": verifier_output.safety_signal if verifier_output else False,
+                "evidence_conflict": verifier_output.evidence_conflict if verifier_output else False,
+                "vision_status": vision_status,
+                "vision_result": vision_result.model_dump() if vision_result else None,
+                "quality": vision_result.quality.model_dump() if (vision_result and vision_result.quality) else None,
+                "requires_imaging": requires_imaging,
+                "is_critical_pathology": effective_critical,
+                "json_report": json_report,
+                "html_report": html_report,
+            },
+        )
+
+        # Inject multimodal metadata for API and Streamlit UI consumption
         if imaging_analysis is not None:
             res.metadata["imaging_modality"] = imaging_analysis.modality
             res.metadata["imaging_impression"] = imaging_analysis.diagnostic_impression
