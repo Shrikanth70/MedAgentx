@@ -2,6 +2,8 @@
 
 This directory contains the camera-ready IEEE Transactions LaTeX source files for the MedAgentX paper:
 - **Title**: *MedAgentX: Adaptive Confidence-Guided Multi-Agent Framework for Multimodal Clinical Decision Support with Fail-Closed Safety Gating*
+- **Authors**: Bhukya Srikanth, Banoth Elisharaj, and G. Baby Lakshmi Prasanna
+- **Affiliation**: Department of CSE (AI & ML), Chaitanya Bharathi Institute of Technology (CBIT), Hyderabad, India
 - **Target Journal**: IEEE Transactions on Biomedical Engineering (TBME) / IEEE Journal of Biomedical and Health Informatics (JBHI)
 - **`main.tex`**: Complete two-column IEEEtran manuscript with formal mathematical formulations ($C_{total}$, $\Pi_{penalty}$), Algorithm 1 (ACMR Multimodal Loop), 2 vector TikZ diagrams (System Architecture and Router Decision State Machine), and 7 publication-standard booktabs tables:
   1. **Table I**: Comprehensive Related-Work Comparison against CheXagent, Med-PaLM M, LLaVA-Med, Clinical Vector RAG, and Adaptive-RAG.

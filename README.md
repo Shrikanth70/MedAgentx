@@ -310,11 +310,23 @@ MedAgentx/
 
 ---
 
-## 11. Academic Paper & Citation
+## 11. Authors & Project Team
+
+This research project is developed at **Chaitanya Bharathi Institute of Technology (CBIT)**, Hyderabad, India:
+
+- **Student Researchers**:
+  - **Bhukya Srikanth** — Department of CSE (AI & ML), CBIT, Hyderabad (`srikanth.cseaiml@cbit.ac.in`)
+  - **Banoth Elisharaj** — Department of CSE (AI & ML), CBIT, Hyderabad (`elisharaj.cseaiml@cbit.ac.in`)
+- **Faculty Supervisor & Project Guide**:
+  - **Smt. G. Baby Lakshmi Prasanna** — Assistant Professor, Department of CSE (AI & ML), CBIT, Hyderabad (`glakshmiprasanna_cseaiml@cbit.ac.in`)
+
+---
+
+## 12. Academic Paper & Citation
 
 The complete camera-ready IEEE Transactions manuscript is located in [`paper/`](paper/):
-- `paper/main.tex`: Two-column LaTeX manuscript with mathematical formulations, Algorithm 1, qualitative failure taxonomy, and empirical benchmark tables.
-- `paper/references.bib`: BibTeX citations.
+- `paper/main.tex`: Two-column IEEEtran manuscript with mathematical formulations, Algorithm 1, 2 vector TikZ diagrams, and 7 publication-grade booktabs tables.
+- `paper/references.bib`: BibTeX citations covering 52 peer-reviewed clinical AI, VLM, RAG, and safety standards references.
 
 To compile the paper:
 ```bash
@@ -328,16 +340,16 @@ pdflatex main.tex
 If you use or build upon MedAgentX in your research, please cite:
 
 ```bibtex
-@article{shrikanth2026medagentx,
-  title     = {MedAgentX: Adaptive Confidence-Guided Multi-Agent Retrieval Framework for Evidence-Based Clinical Decision Support},
-  author    = {Shrikanth, Bhukya},
-  journal   = {IEEE Transactions on Biomedical Engineering / Health Informatics Draft},
+@article{srikanth2026medagentx,
+  title     = {MedAgentX: Adaptive Confidence-Guided Multi-Agent Framework for Multimodal Clinical Decision Support with Fail-Closed Safety Gating},
+  author    = {Srikanth, Bhukya and Elisharaj, Banoth and Prasanna, G. Baby Lakshmi},
+  journal   = {IEEE Transactions on Biomedical Engineering / Journal of Biomedical and Health Informatics (Under Review)},
   year      = {2026}
 }
 ```
 
 ---
 
-## 12. License
+## 13. License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
