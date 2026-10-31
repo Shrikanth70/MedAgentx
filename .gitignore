@@ -1,4 +1,4 @@
-# Python
+# Python runtime & caches
 __pycache__/
 *.py[cod]
 *$py.class
@@ -27,21 +27,54 @@ wheels/
 .pytest_cache/
 .coverage
 htmlcov/
+.tox/
+.nox/
+
+# Logs
 *.log
+logs/
 
-# Environment variables
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.out
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.nav
+*.snm
+*.vrb
+*.run.xml
+*-blx.bib
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Environment variables & secrets
 .env
+.env.*
+!.env.example
 
-# Superpowers execution scratch
-.superpowers/sdd/*/briefs/
-.superpowers/sdd/*/reviews/
-
-# Downloads & Parquet Cache
+# Large model weights & heavy data dumps
+*.bin
+*.pt
+*.pth
+*.onnx
+models/
 data/downloads/
 *.parquet
 
-# Operating System
+# Superpowers / Ephemeral scratch
+.superpowers/
 
+# Operating System files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-

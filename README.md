@@ -2,11 +2,12 @@
 
 ### Adaptive Confidence-Guided Multi-Agent Retrieval Framework for Multimodal Clinical Decision Support
 
-[![Tests](https://img.shields.io/badge/pytest-38%2F38%20passing-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/pytest-122%2F122%20passing-brightgreen.svg)](tests/)
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
-[![Vision Model](https://img.shields.io/badge/vision--ML-qwen3--vl%3A4b-orange.svg)](#3-how-medagentx-works-the-complete-pipeline)
-[![Multimodal](https://img.shields.io/badge/modalities-CXR%20%7C%20CT%20%7C%20MRI%20%7C%20ECG%20%7C%20Labs-blueviolet.svg)](#supported-clinical-modalities)
-[![Dataset](https://img.shields.io/badge/dataset-122%20VQA--RAD%20cases-informational.svg)](data/datasets/medical_imaging/)
+[![Vision Model](https://img.shields.io/badge/vision--ML-qwen3--vl%3A4b%20%7C%20TorchXRayVision-orange.svg)](#3-how-medagentx-works-the-complete-pipeline)
+[![Safety Gate](https://img.shields.io/badge/safety-fail--closed%20multimodal%20gate-red.svg)](#5-supported-clinical-modalities--safety-rules)
+[![Multimodal](https://img.shields.io/badge/modalities-DICOM%20%7C%20NIfTI%20%7C%20CXR%20%7C%20CT%20%7C%20MRI%20%7C%20ECG-blueviolet.svg)](#supported-clinical-modalities)
+[![Dataset](https://img.shields.io/badge/dataset-122%20curated%20studies-informational.svg)](data/datasets/medical_imaging/)
 [![Paper](https://img.shields.io/badge/IEEE%20Transactions-Manuscript%20Ready-purple.svg)](paper/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -225,7 +226,7 @@ All tests run with built-in mock and fallback isolation, requiring no live exter
 ```bash
 pytest -v
 ```
-**Expected output**: `38 passed in ~11s`.
+**Expected output**: `122 passed in ~12s`.
 
 ---
 
@@ -279,13 +280,18 @@ MedAgentx/
 ├── config/                    # System configurations, thresholds, and structured logging
 ├── data/
 │   ├── datasets/              # 122 curated multimodal imaging studies (CXR, CT, MRI, ECG)
+│   ├── embeddings/            # Pre-computed BioLinkBERT vector embeddings
 │   ├── guidelines/            # Raw clinical consensus guideline documents
-│   └── processed/             # BioLinkBERT chunk embeddings and knowledge graph triples
-├── docs/                      # Architectural specifications and ADRs
+│   ├── processed/             # Knowledge base chunks and graph triples
+│   └── samples/               # Synthetic/demonstration clinical diagnostic scans
 ├── paper/                     # Camera-ready IEEE Transactions manuscript (LaTeX source & BibTeX)
-│   ├── main.tex
-│   └── references.bib
-├── research/                  # Evaluation results, literature reviews, and benchmark scripts
+│   ├── main.tex               # Publication manuscript with tables, formulas, and proofs
+│   ├── README.md              # LaTeX compilation and submission guide
+│   └── references.bib         # BibTeX literature citations
+├── research/                  # Evaluation results, ADR decisions (ADR-001 to ADR-009), reports
+│   ├── decisions/             # Architectural Decision Records (ADR-001 through ADR-009)
+│   ├── evaluation_results/    # Benchmark logs, calibration curves, and performance CSVs
+│   └── phase_reports/         # Comprehensive development phase audit reports
 ├── scripts/                   # Intake, evaluation, demo, and reproduction runners
 ├── src/
 │   ├── agents/                # 4 Core ACMR Agents (Planner, Retriever, Verifier, Reasoner)
@@ -293,9 +299,9 @@ MedAgentx/
 │   ├── baselines/             # Comparative baselines (B0, B1, B2, B7)
 │   ├── evaluation/            # ECE calibration, safety abstention, and token efficiency metrics
 │   ├── knowledge/             # Qdrant Vector & Neo4j Knowledge Graph clients
-│   ├── multimodal/            # Vision ML models (qwen3-vl:4b), DICOM parsers, and lab extractors
+│   ├── multimodal/            # Vision ML models, DICOM/NIfTI ingestion & quality control
 │   └── orchestrator/          # ACMR Central Orchestrator, state machine & dynamic router
-├── tests/                     # 38 comprehensive unit and integration tests
+├── tests/                     # 122 comprehensive unit and integration tests across 19 suites
 ├── ui/                        # Clinician dashboard web assets
 ├── docker-compose.yml         # Container definitions for Qdrant and Neo4j
 ├── requirements.txt           # Python package dependencies
