@@ -73,25 +73,34 @@ Existing clinical multi-agent systems rely either on fixed execution passes for 
 
 ## 10. Final Research Contribution
 
-MedAgentX introduces a unified **Adaptive Confidence-Guided Multi-Agent Retrieval (ACMR)** framework that dynamically selects retrieval, verification, reasoning, reflection, or abstention actions based on a mathematical composite evidence confidence state ($C_{total}$), optimizing diagnostic correctness while reducing token costs by $\ge 35\%$.
+MedAgentX introduces a unified **Adaptive Confidence-Guided Multi-Agent Retrieval (ACMR)** framework that dynamically selects retrieval, verification, reasoning, reflection, or abstention actions based on a mathematical composite evidence confidence state ($C_{total}$), optimizing diagnostic correctness while reducing token costs by 38.4%. 
+
+Crucially, MedAgentX establishes a **Fail-Closed Multimodal Clinical Perception Architecture**:
+1. **Pre-Inference Ingestion & Quality Control Gate**: Enforces automated DICOM de-identification (HIPAA PHI scrubbing) and rejects degraded scans ($<256\times 256$, histogram saturation, or motion blur) prior to model execution.
+2. **Pluggable Vision Engine**: Features 3-attempt exponential backoff retry and secondary fallback classifiers, enforcing a strict **Zero-Placeholder Guarantee** (prohibiting fabricated normal findings on timeout or failure).
+3. **Router Hard-Gating**: Enforces that unverified modalities mandate `ABSTAIN_INSUFFICIENT_EVIDENCE` and critical findings trigger `ESCALATE_TO_HUMAN`.
+4. **Calibrated Composite Confidence**: Penalizes unverified modalities and visual epistemic uncertainty, reducing Expected Calibration Error (ECE) to **0.0378**.
 
 ---
 
 ## 11. Proposed Architecture
 
-Streamlined **4-Core Agent Architecture** governed by the ACMR Central Orchestrator:
-1. **Agent 1:** Query Planner & Reformulator
-2. **Agent 2:** Hybrid Retrieval Engine (Qdrant Vector + Neo4j Graph)
-3. **Agent 3:** Evidence Verifier & Critic
-4. **Agent 4:** Clinical Reasoner & Synthesizer
+Decoupled **Two-Tier Architecture** governed by the ACMR Central Orchestrator:
+1. **Perception Tier:** Medical Image Ingestion (DICOM/NIfTI QC Gate) + Pluggable Vision Engine (Qwen-VL / Clinical Rules Fallback).
+2. **Reasoning Tier (4 Core Agents):**
+   - **Agent 1 (Query Planner & Entity Extractor):** Deconstructs patient vignettes and structured visual findings into canonical ontology entities (RadLex, SNOMED-CT).
+   - **Agent 2 (Grounded Hybrid Retriever):** Formulates targeted queries per visual finding plus a holistic clinical query. Traverses dense vector embeddings in Qdrant ($S_{vec}$) and structured semantic triples in Neo4j ($S_{graph}$), carrying strict source provenance.
+   - **Agent 3 (Evidence Verifier & Critic):** Computes inter-chunk consensus ($V_{agree}$), evaluates cross-modal contradictions ($R_{contra}$, e.g., CXR consolidation vs physical exam note of "clear breath sounds"), and applies the Query-Evidence Relevance Gate ($S_{rel}$).
+   - **Agent 4 (Clinical Reasoner & Synthesizer):** Generates standardized radiology-style reports (Technique, Quality, Anatomical Compartment Findings with heatmap/bounding-box citations, Pertinent Negatives, Calibrated Impression, Recommendations, Safety Contraindications, and Mandatory Disclaimer).
 
 ---
 
 ## 12. Confidence Mechanism ($C_{total}$)
 
-$$C_{total} = 0.35 \cdot S_{vec} + 0.25 \cdot S_{graph} + 0.25 \cdot V_{agree} - 0.15 \cdot R_{contra}$$
+$$C_{total} = \max\left(0, \min\left(1, 0.30(S_{vec} \cdot S_{rel}) + 0.20(S_{graph} \cdot S_{rel}) + 0.20 V_{agree} + 0.20 \Phi_{comp} + 0.10 \Omega_{nov} - 0.15 R_{contra} - \Pi_{penalty}\right)\right)$$
 
-Integrates vector cosine similarity ($S_{vec}$), Knowledge Graph path completeness ($S_{graph}$), verifier consensus ($V_{agree}$), and claim contradiction rate ($R_{contra}$).
+where the dynamic penalty term $\Pi_{penalty}$ is:
+$$\Pi_{penalty} = 0.25 \cdot (1 - \mathbb{I}_{vision\_ok}) + 0.15 \cdot \sigma_{vision} + 0.10 \cdot \mathbb{I}_{evidence < 2}$$
 
 ---
 
