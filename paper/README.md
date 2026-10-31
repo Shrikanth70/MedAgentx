@@ -3,8 +3,15 @@
 This directory contains the camera-ready IEEE Transactions LaTeX source files for the MedAgentX paper:
 - **Title**: *MedAgentX: Adaptive Confidence-Guided Multi-Agent Framework for Multimodal Clinical Decision Support with Fail-Closed Safety Gating*
 - **Target Journal**: IEEE Transactions on Biomedical Engineering (TBME) / IEEE Journal of Biomedical and Health Informatics (JBHI)
-- **`main.tex`**: Complete two-column IEEEtran manuscript with formal mathematical formulations ($C_{total}$, $\Pi_{penalty}$), Algorithm 1 (ACMR Multimodal Loop), Table I (Clinical Baselines), Table II (Multimodal CDSS Benchmark across 122 Cases), Table III (Ablation Matrix), and Qualitative Failure Taxonomy (Cross-Disease Misattribution and Fail-Open vs Fail-Closed Vision Analysis).
-- **`references.bib`**: BibTeX bibliography database covering foundational clinical AI, CheXagent, RadLex, IEC 62304 medical device software standards, Adaptive-RAG, and calibration literature.
+- **`main.tex`**: Complete two-column IEEEtran manuscript with formal mathematical formulations ($C_{total}$, $\Pi_{penalty}$), Algorithm 1 (ACMR Multimodal Loop), 2 vector TikZ diagrams (System Architecture and Router Decision State Machine), and 7 publication-standard booktabs tables:
+  1. **Table I**: Comprehensive Related-Work Comparison against CheXagent, Med-PaLM M, LLaVA-Med, Clinical Vector RAG, and Adaptive-RAG.
+  2. **Table II**: MedAgentX Component and Agent Architecture Specification.
+  3. **Table III**: Empirical Baseline Comparison across B0, B1, B2, B7, and MedAgentX.
+  4. **Table IV**: Component Ablation Study ($S_{rel}$, Knowledge Graph, Contradiction Penalty, Fail-Closed Hard Gate, Early Stopping).
+  5. **Table V**: Benchmark Datasets and Clinical Knowledge Sources (VQA-RAD, MIMIC-CXR subset, Cardiology and Infectious Disease guidelines).
+  6. **Table VI**: Failure-Mode and Clinical Safety Analysis across Adverse Scenarios (including VLM timeout fail-closed case).
+  7. **Table VII**: System Hyperparameters, Thresholds, and Model Configurations ($\tau_{high}$, $\tau_{low}$, $T_{max}$, backoff retries, penalty coefficients).
+- **`references.bib`**: Curated, verified BibTeX bibliography database covering foundational clinical AI, CheXagent, LLaVA-Med, Med-PaLM, RadLex, IEC 62304 medical device software standards, Adaptive-RAG, TorchXRayVision, and calibration literature.
 
 ## Key Research Highlights Included in the Manuscript
 
