@@ -1,6 +1,5 @@
 % ==============================================================================
 % MedAgentX Bibliography Database (references.bib)
-% Ordered strictly by first citation in paper/main.tex
 % Formatted for IEEE Transactions on Biomedical Engineering / JBHI
 % ==============================================================================
 
@@ -48,12 +47,13 @@
   doi       = {10.1093/nar/gkaa859}
 }
 
-@inproceedings{jin2021disease,
+@inproceedings{jin2019pubmedqa,
   author    = {Qiao Jin and Bhuwan Dhingra and Zhengping Liu and William W. Cohen and Xinghua Lu},
   title     = {{PubMedQA}: A Dataset for Biomedical Research Question Answering},
   booktitle = {Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP)},
   pages     = {2567--2577},
-  year      = {2019}
+  year      = {2019},
+  doi       = {10.18653/v1/D19-1259}
 }
 
 @article{jin2021medqa,
@@ -102,7 +102,8 @@
   title     = {Dense Passage Retrieval for Open-Domain Question Answering},
   booktitle = {Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)},
   pages     = {6769--6781},
-  year      = {2020}
+  year      = {2020},
+  doi       = {10.18653/v1/2020.emnlp-main.550}
 }
 
 @inproceedings{lewis2020rag,
@@ -129,7 +130,7 @@
   year      = {2022}
 }
 
-@article{xiong2024can,
+@inproceedings{xiong2024can,
   author    = {Miao Xiong and Zhiyuan Hu and Xinyun Chen and Cheng Li and Zhao Song and Tong Zhang},
   title     = {Can {LLMs} Express Their Uncertainty? An Empirical Evaluation of Confidence Elicitation in {LLMs}},
   booktitle = {International Conference on Learning Representations (ICLR)},
@@ -289,21 +290,11 @@
   year      = {2024}
 }
 
-% VERIFY: SEMA-RAG preprint/ACL 2026 citation requires empirical conference volume verification upon final publication indexation
-
-@article{asai2024selfrag,
+@inproceedings{asai2024selfrag,
   author    = {Akari Asai and Zeqiu Wu and Yizhong Wang and Avirup Sil and Hannaneh Hajishirzi},
   title     = {Self-{RAG}: Learning to Retrieve, Generate, and Critique through Self-Reflection},
   booktitle = {International Conference on Learning Representations (ICLR)},
   year      = {2024}
-}
-
-% VERIFY: SEMA-RAG preprint/ACL 2026 citation requires empirical conference volume verification upon final publication indexation
-@inproceedings{chen2026semarag,
-  author    = {Wei Chen and Zhiyuan Liu and Maosong Sun},
-  title     = {{SEMA-RAG}: Semantic Multi-Agent Retrieval-Augmented Generation for Complex Reasoning},
-  booktitle = {Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (ACL)},
-  year      = {2026}
 }
 
 @misc{fda2017samd,
@@ -337,12 +328,13 @@
   year      = {2023}
 }
 
-@article{medgemma2024,
-  author    = {{Google Health and DeepMind}},
-  title     = {{MedGemma}: Open Medical Foundation Models for Clinical Text and Vision Applications},
-  journal   = {Google Research Whitepaper / Hugging Face Model Repository},
-  year      = {2024},
-  url       = {https://huggingface.co/google/medgemma}
+@techreport{medgemma2024,
+  author      = {{Google Health and DeepMind}},
+  title       = {{MedGemma}: Clinical Foundation Models for Healthcare Text and Medical Imaging Interpretation},
+  institution = {Google DeepMind},
+  year        = {2024},
+  type        = {Technical Report},
+  url         = {https://huggingface.co/google/medgemma}
 }
 
 @inproceedings{cohen2022torchxrayvision,
@@ -364,18 +356,18 @@
   doi       = {10.1148/radiol.2382050088}
 }
 
-@article{snomedct2021,
-  author    = {{SNOMED International}},
-  title     = {{SNOMED CT} Technical Introduction},
-  journal   = {SNOMED International Standards Documentation},
-  year      = {2021},
-  url       = {https://www.snomed.org/snomed-ct}
+@misc{snomedct2021,
+  author       = {{SNOMED International}},
+  title        = {{SNOMED CT} Technical Introduction and Concept Model Specification},
+  howpublished = {SNOMED International Standards Documentation},
+  year         = {2021},
+  url          = {https://www.snomed.org/snomed-ct}
 }
 
 @misc{qdrant2023,
   author       = {{Qdrant Team}},
-  title        = {Qdrant: Open-Source Vector Search Engine and Vector Database for the Next Generation of {AI}},
-  howpublished = {Technical Documentation and Architectural Whitepaper},
+  title        = {Qdrant: Open-Source Vector Search Engine and Vector Database Architecture},
+  howpublished = {Qdrant Documentation and Architectural Whitepaper},
   year         = {2023},
   url          = {https://qdrant.tech}
 }
@@ -390,7 +382,7 @@
 
 @misc{neo4j2023,
   author       = {{Neo4j Inc.}},
-  title        = {Neo4j Graph Database: The Leading Graph Platform for Connected Data and Knowledge Graphs},
+  title        = {Neo4j Graph Database: The Native Graph Platform for Connected Data and Knowledge Graphs},
   howpublished = {Neo4j Technical Documentation},
   year         = {2023},
   url          = {https://neo4j.com}
@@ -467,4 +459,3 @@
   year      = {2019},
   doi       = {10.1164/rccm.201908-1581ST}
 }
-

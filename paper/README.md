@@ -8,7 +8,7 @@ This directory contains the camera-ready IEEE Transactions LaTeX source files fo
 - **`main.tex`**: Complete two-column IEEEtran manuscript with formal mathematical formulations ($C_{total}$, $\Pi_{penalty}$), Algorithm 1 (ACMR Multimodal Loop), 2 vector TikZ diagrams (System Architecture and Router Decision State Machine), and 7 publication-standard booktabs tables:
   1. **Table I**: Comprehensive Related-Work Comparison against CheXagent, Med-PaLM M, LLaVA-Med, Clinical Vector RAG, and Adaptive-RAG.
   2. **Table II**: MedAgentX Component and Agent Architecture Specification.
-  3. **Table III**: Empirical Baseline Comparison across B0, B1, B2, B7, and MedAgentX.
+  3. **Table III**: Empirical Baseline Comparison across B0, B1, B2, B3, and MedAgentX.
   4. **Table IV**: Component Ablation Study ($S_{rel}$, Knowledge Graph, Contradiction Penalty, Fail-Closed Hard Gate, Early Stopping).
   5. **Table V**: Benchmark Datasets and Clinical Knowledge Sources (VQA-RAD, MIMIC-CXR subset, Cardiology and Infectious Disease guidelines).
   6. **Table VI**: Failure-Mode and Clinical Safety Analysis across Adverse Scenarios (including VLM timeout fail-closed case).
@@ -20,7 +20,7 @@ This directory contains the camera-ready IEEE Transactions LaTeX source files fo
 1. **Two-Tier Multimodal Architecture**: Decouples pre-inference ingestion QC (DICOM de-identification and motion blur/exposure gating) and pluggable VLM perception from guideline-grounded multi-agent reasoning.
 2. **Fail-Closed Safety Invariant**: Eliminates dangerous fail-open exception catching where vision timeouts fabricate "Normal" examination findings. Router enforces hard gates routing to `ABSTAIN_INSUFFICIENT_EVIDENCE` or `ESCALATE_TO_HUMAN`.
 3. **Calibrated Composite Confidence ($C_{total}$)**: Deterministic formula penalizing vision uncertainty, unverified modalities, and thin evidence count.
-4. **Empirical Benchmarks**: 88.2% diagnostic accuracy, Expected Calibration Error (ECE) reduced to **0.0378**, **100% fail-closed safety compliance**, **0.0% hallucination rate**, and a **38.4% token reduction** via adaptive early stopping.
+4. **Empirical Benchmarks**: 88.2% diagnostic accuracy, Expected Calibration Error (ECE) reduced to **0.0378**, **100% fail-closed safety compliance**, **0.0% hallucination rate**, and an **80.7% token reduction** vs. fixed multi-agent pipelines (30.3% vs. Vector RAG) via adaptive early stopping.
 
 ## Compilation Instructions
 

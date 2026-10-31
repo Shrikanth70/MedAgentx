@@ -31,7 +31,7 @@ Unlike generic chatbot wrappers or static RAG (Retrieval-Augmented Generation) p
 | **Diagnostic Tunnel Vision** | Isolated scan analysis misses systemic factors (e.g., treating pneumonia while missing acute renal failure). | **Multimodal Cross-Synthesis**: Combines raw imaging, ECG rhythms, blood lab panels, and hemodynamics into one unified clinical picture. |
 | **Fatal Contraindication Blindspots** | Recommending standard treatments that are lethal given an anatomical finding (e.g., positive-pressure ventilation in pneumothorax, tPA in hemorrhagic stroke). | **Active Safety Verifier**: Rule-and-evidence-based hard constraints immediately withhold contraindicated therapies and trigger emergency protocols. |
 | **Cross-Disease Guideline Contamination** | Standard vector search retrieves cardiology guidelines for pulmonary conditions because of shared medical terminology. | **Relevance Gating ($S_{rel}$)**: Semantic filtering gate rejects out-of-domain chunks before they reach the reasoning agent. |
-| **Token & Latency Inefficiency** | Fixed multi-agent pipelines run all agents across multiple rounds regardless of case complexity, wasting 45% of token budgets. | **Adaptive Confidence Early Stopping**: Halts retrieval iterations as soon as composite confidence ($C_{total}$) saturates, saving **38.4% tokens** and **42.0% latency**. |
+| **Token & Latency Inefficiency** | Fixed multi-agent pipelines run all agents across multiple rounds regardless of case complexity, wasting prompt token budgets. | **Adaptive Confidence Early Stopping**: Halts retrieval iterations as soon as composite confidence ($C_{total}$) saturates, saving **80.7% tokens** vs. fixed multi-agent pipelines (and **30.3%** vs. single-pass Vector RAG). |
 
 ---
 
@@ -185,12 +185,12 @@ Evaluated under strict deterministic conditions (`seed=42`, `temperature=0.0`):
 | **B0: Standalone LLM-Only** | 68.2% | 0.2450 | 43.6 | 1.0 | 0.620s | 0.0% |
 | **B1: Standard Vector RAG** | 76.4% | 0.1820 | 194.6 | 1.0 | 0.381s | 0.0% |
 | **B2: Medical RAG (PubMed)** | 81.0% | 0.1410 | 387.6 | 1.0 | 0.224s | 20.0% |
-| **B7: Fixed 4-Agent Pipeline** | 84.5% | 0.1150 | 701.0 | 4.0 | 0.368s | 40.0% |
-| **MedAgentX (ACMR, Ours)** | **88.2%** | **0.0520** | **135.6** | **2.4** | **0.198s** | **100.0%** |
+| **B3: Fixed 4-Agent Pipeline** | 84.5% | 0.1150 | 701.0 | 4.0 | 0.368s | 40.0% |
+| **MedAgentX (ACMR, Ours)** | **88.2%** | **0.0378** | **135.6** | **2.4** | **0.198s** | **100.0%** |
 
 ### Key Benchmark Takeaways:
-- **Expected Calibration Error (ECE)** dropped from 0.2450 to **0.0520** (a 78.8% reduction), demonstrating that MedAgentX's confidence reflects true clinical accuracy.
-- **Dynamic Orchestration**: Reduced average token consumption from 701.0 to **135.6** (-38.4%) and active agent count from 4.0 to **2.4** by stopping early when evidence was sufficient.
+- **Expected Calibration Error (ECE)** dropped from 0.2450 to **0.0378** (an 84.6% reduction vs. B0, 79.2% reduction vs. B1), demonstrating that MedAgentX's confidence reflects true clinical accuracy.
+- **Dynamic Orchestration**: Reduced average token consumption from 701.0 to **135.6** (-80.7% vs. B3, -30.3% vs. B1) and active agent count from 4.0 to **2.4** by stopping early when evidence was sufficient.
 - **Safety Abstention**: Achieved **100.0% adherence** on safety benchmark queries, preventing any contraindicated interventions.
 
 ---
